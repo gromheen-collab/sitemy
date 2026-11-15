@@ -1,0 +1,61 @@
+name: Collect data
+
+on:
+  workflow_dispatch:
+    inputs:
+      heroes:
+        description: 'Hero ids, comma separated. Empty = all heroes. Example: 135'
+        required: false
+        default: ''
+      weeks:
+        description: 'Weeks to merge, 1 to 4 (the current partial week plus full weeks)'
+        required: false
+        default: '1'
+      ranks:
+        description: 'Ranks, comma separated (DIVINE_IMMORTAL, LEGEND_ANCIENT, ..., all)'
+        required: false
+        default: 'DIVINE_IMMORTAL'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collect-data
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Full past weeks never change, so they are kept between runs.
+      - name: Restore the week cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: weeks-${{ github.run_id }}
+          restore-keys: |
+            weeks-
+
+      - name: Collect
+        env:
+          STRATZ_TOKEN: ${{ secrets.STRATZ_TOKEN }}
+          HEROES: ${{ inputs.heroes }}
+          WEEKS: ${{ inputs.weeks }}
+          RANKS: ${{ inputs.ranks }}
+        run: node collector/collect.mjs
+
+      - name: Keep the data for a few days
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: data
+          path: data
+          if-no-files-found: ignore
+          retention-days: 3
