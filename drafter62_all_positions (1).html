@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Драфт-хелпер: Dota 2, все позиции</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;500&display=swap">
+<style>
+:root{--bg:#14181d;--panel:#1c2229;--line:#2e3742;--text:#e6dfd0;--mute:#8d96a0;--gold:#c9a24a;--rad:#6fae5b;--dire:#c4443a;--me:var(--rad)}
+body.dire{--me:var(--dire)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.4 Barlow,system-ui,sans-serif;padding:20px;max-width:1200px;margin-inline:auto}
+h1,h2{font-family:'Barlow Condensed',Impact,sans-serif;margin:0;font-weight:700;letter-spacing:.02em}
+h1{font-size:30px}h2{font-size:20px;color:var(--gold)}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.bar{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--gold)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button.on{background:var(--gold);color:#14181d;border-color:var(--gold);font-weight:500}
+.side button.on[data-side=radiant]{background:var(--rad);border-color:var(--rad)}
+.side button.on[data-side=dire]{background:var(--dire);border-color:var(--dire);color:#fff}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.team{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--me);padding:12px;border-radius:4px}
+.team.enemy{border-top-color:var(--mute)}
+body.dire .team.enemy{border-top-color:var(--rad)}body:not(.dire) .team.enemy{border-top-color:var(--dire)}
+.team h2{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.team h2 small{font:400 13px Barlow,sans-serif;color:var(--mute)}
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.slot{aspect-ratio:16/10;border:1px dashed var(--line);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:0;overflow:hidden;background:#12161b;font-size:12px;color:var(--mute)}
+.slot.sel{border:2px solid var(--gold);color:var(--gold)}
+.slot.fill{border-style:solid}
+.slot img{width:100%;height:100%;object-fit:cover}
+.slot .nm{position:absolute;left:0;right:0;bottom:0;background:#000b;color:var(--text);font-size:11px;padding:1px 3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .st{position:absolute;top:2px;left:4px;font-size:10px;color:var(--mute);text-shadow:0 0 3px #000}
+.stagehint{margin:8px 0 0;font-size:12px;color:var(--mute)}
+.main{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+input[type=search]{font:inherit;background:#12161b;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:6px 10px;min-width:150px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;max-height:520px;overflow:auto;padding-right:4px}
+.hero{padding:0;position:relative;overflow:hidden;aspect-ratio:16/10;border-radius:3px;background:#12161b}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero span{position:absolute;left:0;right:0;bottom:0;background:#000b;font-size:10.5px;padding:1px 2px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero.dim{opacity:.28;pointer-events:none}
+.hero.pool{outline:2px solid var(--gold)}
+.hero.pool::after{content:"★";position:absolute;top:1px;right:4px;color:var(--gold);font-size:13px;text-shadow:0 0 3px #000}
+.pool-list{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.chip{font-size:12px;padding:2px 8px;border:1px solid var(--gold);border-radius:10px;color:var(--gold);background:none}
+.mute{color:var(--mute);font-size:13px}
+.empty{padding:20px;text-align:center;color:var(--mute)}
+.reco{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.slot.mine{box-shadow:0 0 0 2px var(--me)}
+.slot.mine::after{content:"я";position:absolute;top:2px;right:4px;font-size:11px;color:var(--me);text-shadow:0 0 3px #000}
+button{transition:transform .15s,border-color .15s,box-shadow .15s,background .15s}
+.hero:hover{transform:translateY(-2px) scale(1.05);z-index:1}
+.slot.sel{animation:pulse 1.3s ease-in-out infinite}
+.slot.pop img{animation:drop .45s cubic-bezier(.3,1.5,.5,1)}
+.slot.flip{animation:flip .6s ease-out}
+@keyframes drop{from{transform:translateY(-18px) scale(.85);opacity:0}to{transform:none;opacity:1}}
+@keyframes flip{from{transform:perspective(400px) rotateY(90deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #c9a24a00}50%{box-shadow:0 0 10px 2px #c9a24a99}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.mebar{margin-top:8px;font-size:12px;color:var(--mute);display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.mebar button{padding:2px 8px;font-size:12px}
+.src{display:grid;gap:8px}
+.src input,.src select{font:inherit;background:#12161b;color:var(--text);border:1px solid var(--line);border-radius:4px;padding:6px 10px;width:100%}
+pre#out{max-height:360px;overflow:auto;background:#12161b;border:1px solid var(--line);padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-all;margin:0;animation:fade .3s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.rc{border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:8px 10px;margin:8px 0;animation:slide .35s ease-out backwards}
+.rc b{font-family:'Barlow Condensed',Impact,sans-serif;font-size:17px;color:var(--text)}
+.bar2{height:5px;background:#12161b;border-radius:3px;overflow:hidden;margin:5px 0}
+.bar2 i{display:block;height:100%;background:var(--gold);transform-origin:left;animation:grow .6s ease-out}
+@keyframes slide{from{opacity:0;transform:translateX(14px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+#recs{max-height:560px;overflow:auto;padding-right:4px}
+.rr{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:4px 6px;border-bottom:1px solid var(--line);font-size:13px;animation:slide .3s ease-out backwards}
+.rr b{font-weight:500;color:var(--text);min-width:130px}
+.rr span:nth-of-type(1){color:var(--gold)}
+.poss{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
+.poss select{width:100%;font:inherit;font-size:12px;background:#12161b;color:var(--text);border:1px solid var(--line);border-radius:3px;padding:2px}
+.poss select.man{border-color:var(--gold);color:var(--gold)}
+.pick{padding:2px 10px;font-size:12px;margin-top:4px}
+.rc.chosen{border-left-color:var(--me);box-shadow:0 0 0 1px var(--me)}
+.build{animation:slide .35s ease-out;margin-top:10px;border-top:1px solid var(--line);padding-top:6px}
+.build h3{margin:8px 0 4px;font:700 16px 'Barlow Condensed',sans-serif;color:var(--gold)}
+.build ul{margin:4px 0;padding-left:18px}
+.build li{margin:4px 0;font-size:13px}
+.modal{position:fixed;inset:0;background:#000b;display:flex;align-items:flex-start;justify-content:center;padding:4vh 3vw;z-index:50;overflow:auto;animation:fade .2s}
+.modal[hidden],#dbg[hidden]{display:none}
+.mbox{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--me);border-radius:6px;width:min(1100px,100%);padding:22px;position:relative;animation:slide .3s ease-out}
+#mclose{position:absolute;top:10px;right:12px;font-size:18px;line-height:1;padding:4px 10px}
+.mbox .build{margin:0;border:0;padding:0}
+.bcols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:6px}
+.items{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.it{width:70px;text-align:center;font-size:10.5px;line-height:1.2;color:var(--mute)}
+.it img{width:100%;aspect-ratio:88/64;object-fit:cover;border-radius:3px;display:block;background:#12161b}
+.it b{display:block;color:var(--text);font-weight:500}
+.sit{margin:8px 0;padding:8px 10px;border-left:3px solid var(--gold);background:#12161b;border-radius:3px;font-size:13px}
+.it[data-it]{cursor:pointer;transition:transform .15s}
+.it[data-it]:hover{transform:translateY(-2px)}
+.it.sel img{outline:2px solid var(--gold)}
+.it.nx img{outline:2px dashed var(--gold)}
+.it.sg img{outline:2px solid var(--me);outline-offset:1px}
+.ph{margin:6px 0}
+.ph h4{margin:8px 0 2px;font:700 14px 'Barlow Condensed',sans-serif;color:var(--text)}
+.tbl summary{cursor:pointer;color:var(--gold);margin:10px 0 4px;font:700 15px 'Barlow Condensed',sans-serif}
+.tb{width:100%;border-collapse:collapse;font-size:12px}
+.tb th,.tb td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+.tb th{color:var(--mute);font-weight:500}
+.tb img{width:34px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.bs{display:flex;align-items:center;gap:2px}
+.kc{display:flex;align-items:center;gap:2px}
+.kc .it{width:52px}
+.bs.df>.it img{outline:2px solid var(--gold)}
+.it.shd img{outline:2px dotted var(--gold)}
+.it.ins img{outline:2px dashed #4cc9c0;outline-offset:1px}
+.it.dm{opacity:.5}
+.it[data-bp],.it[data-bpx]{cursor:pointer}
+.rsn{margin:6px 0 4px;padding-left:18px;font-size:12px;color:var(--mute)}
+.rsn li{margin:3px 0}
+.bctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0;font-size:13px;color:var(--mute)}.bctl select{background:transparent;color:inherit;border:1px solid #555;border-radius:6px;padding:3px 6px;margin-left:4px}.bctl option{color:#000}
+.est{opacity:.55;outline:1px dashed #9aa;outline-offset:-1px}
+.kit{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0;padding:6px;border:1px solid #333;border-radius:8px}.kit .it{width:48px}.kl{font-size:11px;font-weight:700;color:#4aa;min-width:84px}.kit .ks{font-size:12px;color:var(--mute);margin-left:auto}
+.rsn b{color:var(--text)}
+@media(max-width:820px){.bcols{grid-template-columns:1fr}}
+@media(max-width:820px){.board,.main{grid-template-columns:1fr}.slots{gap:5px}}
+
+.score-breakdown { margin: 5px 0; font-size: 11px; }
+.score-breakdown summary { cursor: pointer; color: var(--mute); }
+.score-breakdown > div { margin-top: 4px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Драфт-хелпер <small class="mute">v37</small></h1><div class="mute">Все 5 позиций · ранкед, три стадии пиков</div></div>
+  <div class="bar side" id="side">
+    <button data-side="radiant" class="on">Я за Radiant</button>
+    <button data-side="dire">Я за Dire</button>
+    <button id="reset">Сбросить драфт</button>
+  </div>
+</header>
+
+<section class="board">
+  <div class="team"><h2>Мои <small id="mylbl">Radiant</small></h2><div class="slots" id="ally"></div><div class="poss" id="allyPos"></div><div class="mebar" id="mebar"></div><div class="mebar" id="myposbar"></div></div>
+  <div class="team enemy"><h2>Враги <small id="enlbl">Dire</small></h2><div class="slots" id="enemy"></div><div class="poss" id="enemyPos"></div></div>
+</section>
+<p class="stagehint">Стадии: 1-я и 2-я по два героя с каждой стороны, 3-я по одному. Кликни пустой слот, чтобы выбрать, куда ставить героя. Клик по занятому слоту убирает героя.</p>
+
+<section class="main">
+  <div class="card">
+    <div class="tools">
+      <div class="bar" id="mode">
+        <button data-mode="ally" class="on">Пик союзника</button>
+        <button data-mode="enemy">Пик врага</button>
+        <button data-mode="pool">Редактор пула</button>
+      </div>
+      <input type="search" id="q" placeholder="Поиск героя">
+      <div class="bar" id="attr">
+        <button data-attr="all" class="on">Все</button><button data-attr="str">STR</button><button data-attr="agi">AGI</button><button data-attr="int">INT</button><button data-attr="all2">UNI</button>
+      </div>
+      <button id="onlypool">Только мой пул</button>
+    </div>
+    <div class="grid" id="grid"><div class="empty">Загружаю героев…</div></div>
+  </div>
+  <div class="card">
+    <h2>Пул позиции <span id="poolpos">3</span> (<span id="pc">0</span>)</h2>
+    <div class="pool-list" id="pool"></div>
+    <p class="mute" id="poolhint">Выбери позицию в строке «Моя позиция», затем включи «Редактор пула». У каждой из пяти позиций свой независимый пул; он сохраняется в этом браузере.</p>
+    <div class="reco"><h2>Статистика матчей</h2>
+      <div class="mute" id="collst"></div><div class="bar2"><i id="colbar" style="width:0%"></i></div>
+      <div class="bar"><button id="colgo">Собрать / обновить</button><button id="colsave">Сохранить в файл</button><button id="colload">Загрузить из файла</button></div>
+      <input type="file" id="colfile" accept=".json" hidden></div>
+    <div class="reco"><h2>Источник данных</h2>
+      <div class="src"><div class="mute" id="srclbl"></div>
+        <input type="password" id="tok" placeholder="Токен Stratz (хранится только в этом браузере)" autocomplete="off">
+        <select id="rank"><option value="all">Все ранги</option><option value="HERALD_GUARDIAN">Рекрут-Страж</option><option value="CRUSADER_ARCHON">Рыцарь-Герой</option><option value="LEGEND_ANCIENT">Легенда-Властелин</option><option value="DIVINE_IMMORTAL">Божество-Титан</option></select>
+        <select id="wkn" aria-label="Сколько недель данных"><option value="1">Данные: только текущая неделя</option><option value="2">Текущая + 1 полная неделя</option><option value="3">Текущая + 2 полные недели</option><option value="4">Текущая + 3 полные недели</option></select>
+        <div class="mute" id="wkinfo"></div>
+        <div class="bar"><button id="test">Проверить Stratz</button></div>
+        <pre id="out" hidden></pre>
+        <details class="tbl" id="dbg" hidden><summary>Для отладки</summary><button id="schema">Поля схемы</button><input id="tname" value="HeroStatsQuery" aria-label="Имя типа GraphQL"><div class="bar"><button id="tfields">Описать тип и matchUp</button><button id="feed">Проверить выдачу</button><button id="feed2">Проверить week и ранги</button><button id="itemdump">Описать предметы</button><button id="guidedump">Описать гайды</button><button id="matchdump">Описать матч игрока</button><button id="probe">Проба матчей</button></div>
+        </details>
+      </div></div>
+    <div class="reco">
+      <h2>Рекомендации</h2>
+      <div id="recs" class="mute"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal" hidden><div class="mbox"><button id="mclose" aria-label="Закрыть">×</button><div id="build" class="build"></div></div></div>
+<script>
+const IMG = s => `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${s}.png`;
+const STAGE = ['Ст. 1','Ст. 1','Ст. 2','Ст. 2','Ст. 3'];
+const S = {mode:'ally', side:'radiant', ally:Array(5).fill(null), enemy:Array(5).fill(null), sel:null, me:null, myPos: Math.max(1, Math.min(5, Number(localStorage.getItem('draftMyPos')) || 3)), fresh:null, chosen:null, apos:{ally:Array(5).fill(null), enemy:Array(5).fill(null)}, pools:{1:new Set(),2:new Set(),3:new Set(),4:new Set(),5:new Set()}, q:'', attr:'all', onlyPool:false};
+let H = [], byId = {};
+try { for (let p = 1; p <= 5; p++) S.pools[p] = new Set(JSON.parse(localStorage.getItem('pool_pos_' + p) || '[]')); } catch (e) {}
+try { if (!localStorage.getItem('pool_pos_' + S.myPos) && localStorage.getItem('pool3')) { S.pools[S.myPos] = new Set(JSON.parse(localStorage.getItem('pool3') || '[]')); localStorage.setItem('pool_pos_' + S.myPos, JSON.stringify([...S.pools[S.myPos]])); } } catch (e) {}
+Object.defineProperty(S, 'pool', {get(){ return this.pools[this.myPos] || (this.pools[this.myPos] = new Set()); }});
+const $ = id => document.getElementById(id);
+const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[ch]));
+const savePool = () => { try { localStorage.setItem('pool_pos_' + S.myPos, JSON.stringify([...S.pool])); } catch (e) {} ensure(); clearTimeout(CT); CT = setTimeout(collectAll, 2500); };
+
+function slotHTML(team, id, i) {
+  const h = byId[id];
+  const sel = (S.sel && S.sel.team === team && S.sel.i === i ? ' sel' : '') + (team === 'ally' && S.me === i ? ' mine' : '');
+  const fx = S.fresh === team + i ? (team === 'ally' ? ' pop' : ' flip') : '';
+  const st = `<i class="st">${STAGE[i]}</i>`;
+  if (!h) return `<button class="slot${sel}" data-team="${team}" data-i="${i}">${st}пусто</button>`;
+  return `<button class="slot fill${sel}${fx}" data-team="${team}" data-i="${i}" title="Убрать: ${h.localized_name}">${st}<img src="${IMG(h.short)}" alt=""><span class="nm">${h.localized_name}</span></button>`;
+}
+
+function render() {
+  document.body.classList.toggle('dire', S.side === 'dire');
+  $('mylbl').textContent = S.side === 'dire' ? 'Dire' : 'Radiant';
+  $('enlbl').textContent = S.side === 'dire' ? 'Radiant' : 'Dire';
+  for (const t of ['ally', 'enemy']) $(t).innerHTML = S[t].map((id, i) => slotHTML(t, id, i)).join('');
+  $('mebar').innerHTML = 'Слот моего пика:' + STAGE.map((s, i) => `<button data-me="${i}" class="${S.me === i ? 'on' : ''}">${i + 1} (${s})</button>`).join('');
+  $('myposbar').innerHTML = 'Моя позиция: ' + [1,2,3,4,5].map(p => `<button data-mypos="${p}" class="${S.myPos === p ? 'on' : ''}">${p}</button>`).join('');
+  S.fresh = null;
+  loadDmg();
+  renderPos();
+  renderRecs();
+  renderBuild();
+  document.querySelectorAll('#side [data-side]').forEach(b => b.classList.toggle('on', b.dataset.side === S.side));
+  document.querySelectorAll('#mode [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  document.querySelectorAll('#attr [data-attr]').forEach(b => b.classList.toggle('on', b.dataset.attr === S.attr));
+  $('onlypool').classList.toggle('on', S.onlyPool);
+  renderGrid(); renderPool();
+}
+
+function renderGrid() {
+  if (!H.length) return;
+  const used = new Set([...S.ally, ...S.enemy]);
+  const q = S.q.trim().toLowerCase();
+  const list = H.filter(h =>
+    (S.attr === 'all' || h.primary_attr === (S.attr === 'all2' ? 'all' : S.attr)) &&
+    (!S.onlyPool || S.pool.has(h.id)) &&
+    (!q || h.localized_name.toLowerCase().includes(q)));
+  $('grid').innerHTML = list.length ? list.map(h => {
+    const dim = S.mode !== 'pool' && used.has(h.id) ? ' dim' : '';
+    const pl = S.pool.has(h.id) ? ' pool' : '';
+    return `<button class="hero${dim}${pl}" data-id="${h.id}" title="${h.localized_name}"><img loading="lazy" src="${IMG(h.short)}" alt="" onerror="this.style.visibility='hidden'"><span>${h.localized_name}</span></button>`;
+  }).join('') : '<div class="empty">Никого не нашёл. Попробуй другой запрос или фильтр.</div>';
+}
+
+function renderPool() {
+  $('poolpos').textContent = S.myPos; $('pc').textContent = S.pool.size;
+  $('pool').innerHTML = [...S.pool].map(id => byId[id]).filter(Boolean)
+    .sort((a, b) => a.localized_name.localeCompare(b.localized_name))
+    .map(h => `<button class="chip" data-rm="${h.id}" title="Убрать из пула">${h.localized_name} ×</button>`).join('');
+  $('poolhint').style.display = S.pool.size ? 'none' : '';
+}
+
+function place(id) {
+  if (S.ally.includes(id) || S.enemy.includes(id)) return;
+  const t = S.mode === 'enemy' ? 'enemy' : 'ally';
+  let i = S.sel && S.sel.team === t && S[t][S.sel.i] == null ? S.sel.i : S[t].indexOf(null);
+  if (i < 0) return;
+  S[t][i] = id; S.sel = null; S.fresh = t + i; render();
+}
+
+$('grid').addEventListener('click', e => {
+  const b = e.target.closest('.hero'); if (!b) return;
+  const id = +b.dataset.id;
+  if (S.mode === 'pool') { S.pool.has(id) ? S.pool.delete(id) : S.pool.add(id); savePool(); render(); }
+  else place(id);
+});
+document.querySelector('.board').addEventListener('click', e => {
+  const b = e.target.closest('.slot'); if (!b) return;
+  const t = b.dataset.team, i = +b.dataset.i;
+  if (S[t][i] != null) { S[t][i] = null; S.apos[t][i] = null; }
+  else { S.sel = {team: t, i}; S.mode = t; }
+  render();
+});
+$('pool').addEventListener('click', e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  S.pool.delete(+b.dataset.rm); savePool(); render();
+});
+$('side').addEventListener('click', e => {
+  if (e.target.dataset.side) { S.side = e.target.dataset.side; render(); }
+});
+$('reset').addEventListener('click', () => {
+  S.ally.fill(null); S.enemy.fill(null);
+  S.apos.ally.fill(null); S.apos.enemy.fill(null);
+  S.chosen = null; S.sel = null; S.me = null; S.panel = false; S.after = null;
+  S.aiKey = null; S.aiRes = null; S.aiErr = ''; S.aiApply = false;
+  render();
+});
+$('mode').addEventListener('click', e => {
+  if (e.target.dataset.mode) { S.mode = e.target.dataset.mode; S.sel = null; render(); }
+});
+$('attr').addEventListener('click', e => { if (e.target.dataset.attr) { S.attr = e.target.dataset.attr; render(); } });
+$('onlypool').addEventListener('click', () => { S.onlyPool = !S.onlyPool; render(); });
+$('q').addEventListener('input', e => { S.q = e.target.value; renderGrid(); });
+
+$('mebar').addEventListener('click', e => {
+  const b = e.target.closest('[data-me]'); if (!b) return;
+  const i = +b.dataset.me; S.me = S.me === i ? null : i; render();
+});
+$('myposbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-mypos]'); if (!b) return;
+  const p = Number(b.dataset.mypos);
+  if (p < 1 || p > 5 || p === S.myPos) return;
+  S.myPos = p;
+  try { localStorage.setItem('draftMyPos', String(p)); } catch (_) {}
+  recPosVersion++;
+  for (const k in D) delete D[k];
+  loadErr = '';
+  render();
+  ensure();
+});
+const SK = 'stratzToken', RK = 'rankBracket';
+const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const WK_KEY = 'drafterWeeks2', WK_SEC = 604800;
+let WKN = [1, 2, 3, 4].includes(Number(lsGet(WK_KEY))) ? Number(lsGet(WK_KEY)) : 2; // how many weeks to gather: the current (partial) one + WKN-1 full ones
+$('tok').value = lsGet(SK); $('rank').value = lsGet(RK) || 'all'; $('wkn').value = String(WKN);
+if (/[?&]debug=1(&|$)/.test(location.search)) $('dbg').hidden = false; // diagnostics: open the page with ?debug=1
+const provider = () => lsGet(SK) ? 'stratz' : 'opendota';
+function srcLabel() {
+  if (STATIC) {
+    const m = STATIC.meta, rk = curRank(), r = m.ranks[rk] || {}, d = new Date(m.generatedAt), age = (Date.now() - d.getTime()) / 864e5;
+    const day = x => x.toLocaleDateString('ru-RU', {day: 'numeric', month: 'numeric'});
+    const from = r.weeks && r.weeks.length ? day(new Date(Math.min(...r.weeks) * 604800000)) : '?';
+    $('srclbl').innerHTML = 'Данные: <a href="https://stratz.com" target="_blank" rel="noopener">STRATZ</a> · ' + escapeHTML(RANK_LABEL[rk] || rk) + ' · с ' + escapeHTML(from) + ' по ' + escapeHTML(isNaN(d) ? '?' : day(d)) + ' · обновлено ' + escapeHTML(isNaN(d) ? '?' : d.toLocaleString('ru-RU', {day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})) + (age > 3 ? ' · ВНИМАНИЕ: данные устарели' : '') + (lsGet(SK) ? '' : '. Токен Stratz нужен только для подсказок по билду.');
+    return;
+  }
+  $('srclbl').textContent = provider() === 'stratz' ? 'Источник: Stratz (токен введён)' : 'Источник: Stratz не подключён. Без токена рекомендаций нет (OpenDota даёт только список героев): вставь токен Stratz.';
+}
+// ---- Static data mode: the site reads files published by the collector (data/meta.json, data/<rank>/<id>.json ...).
+let STATIC = null, BOOTING = true; const SF = {};
+const RANK_LABEL = {all: 'Все ранги', HERALD_GUARDIAN: 'Рекрут-Страж', CRUSADER_ARCHON: 'Рыцарь-Герой', LEGEND_ANCIENT: 'Легенда-Властелин', DIVINE_IMMORTAL: 'Божество-Титан'};
+const sigTimeout = ms => { try { return AbortSignal.timeout(ms); } catch (e) { return undefined; } };
+async function fetchJson(url, opts) { const r = await fetch(url, {signal: sigTimeout(20000), ...opts}); if (!r.ok) throw new Error(url + ': HTTP ' + r.status); return r.json(); }
+const curRank = () => STATIC ? (STATIC.ranks.includes(lsGet(RK)) ? lsGet(RK) : STATIC.ranks[0]) : (lsGet(RK) || 'all');
+async function detectStatic() {
+  if (/[?&]live=1(&|$)/.test(location.search)) return; // ?live=1 forces the old mode with your own Stratz token
+  try {
+    const m = await fetchJson('data/meta.json', {cache: 'no-cache'});
+    const ranks = Object.keys(m.ranks || {}).filter(r => m.ranks[r] && m.ranks[r].heroes > 0);
+    if (m.ver !== 1 || m.complete === false || !ranks.length) return;
+    STATIC = {meta: m, ranks};
+    $('rank').innerHTML = ranks.map(r => '<option value="' + r + '">' + escapeHTML(RANK_LABEL[r] || r) + '</option>').join('');
+    $('rank').value = curRank(); $('wkn').style.display = 'none'; $('wkinfo').style.display = 'none';
+  } catch (e) {}
+}
+srcLabel();
+$('tok').addEventListener('input', e => { lsSet(SK, e.target.value.trim()); srcLabel(); });
+$('rank').addEventListener('change', e => lsSet(RK, e.target.value));
+$('rank').addEventListener('change', () => { for (const k in D) delete D[k]; srcLabel(); ensure(); render(); });
+$('wkn').addEventListener('change', e => { WKN = Number(e.target.value) || 2; lsSet(WK_KEY, String(WKN)); for (const k in D) delete D[k]; ensure(); render(); });
+$('tok').addEventListener('change', () => { ensure(); render(); });
+async function probe(query, label) {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try {
+    const r = await fetch('https://api.stratz.com/graphql', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + lsGet(SK)}, body: JSON.stringify({query})});
+    const body = await r.text();
+    o.textContent = label + ': HTTP ' + r.status + '\n' + body.slice(0, 6000);
+  } catch (e) {
+    o.textContent = 'Запрос не дошёл (' + e.message + '). Скорее всего, Stratz не пускает запросы из браузера (CORS) или их блокирует сеть/расширение. Скопируй это сообщение и покажи мне.';
+  }
+}
+$('test').addEventListener('click', () => probe('{ __typename }', 'Проверка связи'));
+$('schema').addEventListener('click', () => probe('{ __schema { queryType { fields { name type { name kind } } } } }', 'Поля схемы'));
+async function typeInfo(name) {
+  const T = 'name kind ofType{name kind ofType{name kind ofType{name kind}}}';
+  const r = await fetch('https://api.stratz.com/graphql', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + lsGet(SK)}, body: JSON.stringify({query: `{ __type(name: "${name}") { name kind fields { name args { name type { ${T} } } type { ${T} } } enumValues { name } } }`})});
+  const j = await r.json(); return j.data && j.data.__type;
+}
+const tr = t => !t ? '?' : t.kind === 'NON_NULL' ? tr(t.ofType) + '!' : t.kind === 'LIST' ? '[' + tr(t.ofType) + ']' : t.name;
+const base = t => t.ofType ? base(t.ofType) : t.name;
+const fmt = t => t.name + ' (' + t.kind + ')\n' + (t.fields || []).map(f => '  ' + f.name + (f.args.length ? '(' + f.args.map(a => a.name + ': ' + tr(a.type)).join(', ') + ')' : '') + ': ' + tr(f.type)).join('\n') + (t.enumValues && t.enumValues.length ? '\n  значения: ' + t.enumValues.map(v => v.name).join(', ') : '');
+$('tfields').addEventListener('click', async () => {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try {
+    const out = [], t = await typeInfo($('tname').value.trim());
+    if (!t) { o.textContent = 'Такого типа нет.'; return; }
+    
+    const mus = (t.fields || []).filter(f => /^(stats|laneoutcome|matchup)$/i.test(f.name));
+    for (const mu of mus) {
+      out.push('ПОЛЕ ' + mu.name + '(' + mu.args.map(a => a.name + ': ' + tr(a.type)).join(', ') + '): ' + tr(mu.type));
+      const m = await typeInfo(base(mu.type));
+      if (m) {
+        out.push(fmt(m));
+        for (const f of (m.fields || []).filter(f => /^(with|vs)$/i.test(f.name))) { const x = await typeInfo(base(f.type)); if (x) out.push(fmt(x)); }
+      }
+      for (const a of mu.args) {
+        const n = base(a.type);
+        if (/^(Int|Long|Short|Boolean|String|Byte|DateTime)$/.test(n)) continue;
+        const e = await typeInfo(n); if (e && e.kind === 'ENUM') out.push(fmt(e));
+      }
+    }
+    o.textContent = out.join('\n\n');
+  } catch (e) { o.textContent = 'Запрос не дошёл (' + e.message + ').'; }
+});
+const D = {}, K = 300;
+let recPosVersion = 0;
+let busy = false, again = false, loadErr = '';
+const roles = id => (byId[id] && byId[id].roles) || [];
+const nm = id => byId[id] ? byId[id].localized_name : '#' + id;
+const wr = (a, base) => (a[1] + base * K) / (a[0] + K);
+const f1 = x => (x >= 0 ? '+' : '') + x.toFixed(1);
+const NEED = {Initiator: 'инициацию', Disabler: 'дизейбл', Durable: 'живучесть'};
+function baseWr(d) { let m = 0, w = 0; for (const k in d.v) { m += d.v[k][0]; w += d.v[k][1]; } return m ? w / m : 0.5; }
+function merge(o, list) { for (const x of list || []) { const a = o[x.heroId2] || (o[x.heroId2] = [0, 0]); a[0] += +x.matchCount || 0; a[1] += +x.winCount || 0; } }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Stratz rows carry a `week`. info = what the API returned (before the window), rows = after the window.
+function weekCut(rows) {
+  rows = rows || [];
+  let mn = Infinity, mx = -Infinity; const seen = new Set();
+  for (const x of rows) { const w = +x.week; if (x.week != null && Number.isFinite(w)) { seen.add(w); if (w < mn) mn = w; if (w > mx) mx = w; } }
+  return {rows, info: seen.size ? {n: seen.size, min: mn, max: mx} : null};
+}
+function mergeWk(a, b) { if (!b) return a; if (!a) return {...b}; return {n: Math.max(a.n, b.n), min: Math.min(a.min, b.min), max: Math.max(a.max, b.max)}; }
+// Debug probes: what does Stratz actually return (weeks, brackets, duplicates) and what does the `week` argument mean?
+function probeStat(rows) {
+  rows = rows || []; const wk = new Set(), bk = {}, per = {}; let m = 0;
+  for (const x of rows) { if (x.week != null) wk.add(+x.week); const b = x.bracketBasicIds || 'нет'; bk[b] = (bk[b] || 0) + 1; m += +x.matchCount || 0; const k = x.heroId2 != null ? x.heroId2 : x.position; if (k != null) per[k] = (per[k] || 0) + 1; }
+  const w = [...wk].sort((a, b) => a - b), mult = Object.values(per);
+  return {w, m, n: rows.length, text: `${rows.length} строк, матчей Σ${m}, недель ${w.length}` + (w.length ? ` (${w[0]}–${w[w.length - 1]})` : '') + ', ранги ' + JSON.stringify(bk) + (mult.length ? ', строк на ключ: макс ' + Math.max(...mult) : '')};
+}
+function probeVerdict(arg, w) { return !w.length ? 'недель в ответе нет' : w.length === 1 && w[0] === arg ? '→ вернул ровно эту неделю' : w.every(x => x >= arg) ? '→ вернул недели начиная с этой' : '→ странно: ' + w.join(','); }
+function probeSetup() {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return null; }
+  const id = [...S.pool][0] || S.chosen || (H[0] && H[0].id);
+  if (!id) { o.textContent = 'Нет героя для проверки: добавь героя в пул.'; return null; }
+  const out = [], show = () => { o.textContent = out.join('\n'); };
+  const run = async (label, q, pick, arg) => {
+    try { const s = probeStat(pick(await gq(q))); out.push(label + ': ' + s.text + (arg != null ? ' ' + probeVerdict(arg, s.w) : '')); show(); await sleep(150); return s; }
+    catch (e) { out.push(label + ': ошибка ' + e.message); show(); return {w: [], m: 0, n: 0}; }
+  };
+  const pos = S.myPos;
+  const lq = x => `{ heroStats { laneOutcome(heroId: ${id}, isWith: false${x || ''}, positionIds: [POSITION_${pos}]) { heroId2 week bracketBasicIds matchCount } } }`;
+  const mq = x => `{ heroStats { matchUp(heroId: ${id}${x || ''}, take: 150) { heroId with { heroId2 week bracketBasicIds matchCount } vs { heroId2 week bracketBasicIds matchCount } } } }`;
+  const sq = x => `{ heroStats { stats(heroIds: [${id}], groupByPosition: true${x || ''}) { position week bracketBasicIds matchCount } } }`;
+  const pickL = d => d.heroStats.laneOutcome, pickS = d => d.heroStats.stats;
+  const pickM = k => d => (d.heroStats.matchUp || []).filter(r => r.heroId == id).flatMap(r => r[k] || []);
+  return {id, pos, out, show, run, lq, mq, sq, pickL, pickS, pickM};
+}
+async function probeFeed() {
+  const P = probeSetup(); if (!P) return;
+  const {id, pos, out, show, run, lq, mq, sq, pickL, pickS, pickM} = P, rk = lsGet(RK), br = rk && rk !== 'all' ? `, bracketBasicIds: [${rk}]` : '';
+  out.push(`Герой ${nm(id)} (#${id}), позиция ${pos}, ранг ${rk || 'all'}. Каждая строка: что вернул запрос.`); show();
+  const l0 = await run('laneOutcome без week', lq(br), pickL);
+  const m0 = await run('matchUp.vs без week', mq(br), pickM('vs'));
+  await run('matchUp.with без week', mq(br), pickM('with'));
+  const s0 = await run('stats groupByPosition без week', sq(br), pickS);
+  const all = [...l0.w, ...m0.w, ...s0.w], mx = all.length ? Math.max(...all) : null;
+  if (mx == null) { out.push('Недель в ответах нет совсем: аргумент week проверить не на чем.'); show(); return; }
+  for (const w of [mx - 3, mx]) {
+    await run(`laneOutcome week=${w}`, lq(br + `, week: ${w}`), pickL, w);
+    await run(`matchUp.vs week=${w}`, mq(br + `, week: ${w}`), pickM('vs'), w);
+    await run(`stats week=${w}`, sq(br + `, week: ${w}`), pickS, w);
+  }
+  out.push('Готово. Скопируй всё и покажи мне.'); show();
+}
+// Probe 2: which format of the `week` argument works, and what does a request without a rank filter really contain?
+async function probeWeekFmt() {
+  const P = probeSetup(); if (!P) return;
+  const {id, pos, out, show, run, lq, mq, sq, pickL, pickS, pickM} = P;
+  out.push(`Герой ${nm(id)} (#${id}), позиция ${pos}. Настройка ранга здесь игнорируется.`, '— Формат аргумента week —'); show();
+  const base = await run('laneOutcome без аргументов', lq(), pickL);
+  const W0 = base.w.length ? base.w[base.w.length - 1] : null;
+  if (W0 == null) { out.push('Недель в ответе нет: форматы week проверить не на чем.'); show(); }
+  else {
+    const fm = [['номер недели', W0, W0], ['номер недели −1', W0 - 1, W0 - 1], ['секунды начала недели', W0 * 604800, W0], ['секунды предыдущей недели', (W0 - 1) * 604800, W0 - 1], ['миллисекунды начала недели', W0 * 604800000, W0]];
+    let good = null;
+    for (const [name, v, wi] of fm) { const s = await run(`laneOutcome week=${v} (${name})`, lq(`, week: ${v}`), pickL, wi); if (s.n > 0 && !good) good = {name, v, wi}; }
+    if (good) {
+      out.push(`→ формат «${good.name}» работает. Проверяю его на остальных запросах.`); show();
+      await run(`matchUp.vs week=${good.v}`, mq(`, week: ${good.v}`), pickM('vs'), good.wi);
+      await run(`stats week=${good.v}`, sq(`, week: ${good.v}`), pickS, good.wi);
+    } else { out.push('→ ни один формат не вернул строк: аргумент week пока не работает, остаёмся на одной неделе.'); show(); }
+  }
+  out.push('— Ранги: что значит выдача без фильтра —'); show();
+  const bks = ['ALL', 'UNCALIBRATED', 'HERALD_GUARDIAN', 'CRUSADER_ARCHON', 'LEGEND_ANCIENT', 'DIVINE_IMMORTAL'], R = {};
+  for (const b of bks) R[b] = await run(`laneOutcome bracketBasicIds: [${b}]`, lq(`, bracketBasicIds: [${b}]`), pickL);
+  const parts = ['UNCALIBRATED', 'HERALD_GUARDIAN', 'CRUSADER_ARCHON', 'LEGEND_ANCIENT', 'DIVINE_IMMORTAL'], sum = parts.reduce((s, b) => s + R[b].m, 0);
+  out.push(`Сумма матчей: без фильтра ${base.m}, ALL ${R.ALL.m}, все ранги по отдельности ${sum} (${parts.map(b => b.slice(0, 4) + ' ' + R[b].m).join(', ')}).`);
+  if (R.ALL.n === 0) out.push('bracketBasicIds: [ALL] не возвращает строк: как фильтр ALL использовать нельзя.');
+  if (base.m > 0 && R.UNCALIBRATED.m === base.m) out.push('ВНИМАНИЕ: фильтр UNCALIBRATED даёт ровно ту же сумму, что запрос без фильтра: возможно, без фильтра приходят только неоткалиброванные.');
+  else if (base.m > 0 && Math.abs(sum - base.m) / base.m < 0.05) out.push(`Запрос без фильтра ≈ сумме всех рангов (разница ${(Math.abs(sum - base.m) / base.m * 100).toFixed(1)}%): это данные по всем рангам, ярлык UNCALIBRATED на строках просто значение по умолчанию.`);
+  else if (base.m > 0) out.push('Запрос без фильтра не сходится с суммой рангов: сверь суммы выше вручную.');
+  out.push('Готово. Скопируй всё и покажи мне.'); show();
+}
+$('feed').addEventListener('click', probeFeed);
+$('feed2').addEventListener('click', probeWeekFmt);
+function renderWk() {
+  const el = $('wkinfo'); if (!el) return;
+  let w = null; const bad = new Set();
+  for (const id in D) { w = mergeWk(w, D[id].wk); for (const x of D[id].wkErr || []) bad.add(x); }
+  el.textContent = (w ? `Собрано недель: ${w.n} из ${WKN} (номера ${w.min}–${w.max}, последняя неполная).` : 'Недели: данных пока нет.') + (bad.size ? ` Не загрузились: ${[...bad].join(', ')}.` : '');
+}
+
+async function gq(q) {
+  const r = await fetch('https://api.stratz.com/graphql', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + lsGet(SK)}, body: JSON.stringify({query: q})});
+  const j = await r.json();
+  if (!j.data) throw new Error(j.errors ? j.errors[0].message : 'HTTP ' + r.status);
+  return j.data;
+}
+function timeStats(rows) {
+  const t = {}; let M = 0, W = 0;
+  for (const x of rows || []) { const a = t[x.time] || (t[x.time] = [0, 0]); a[0] += +x.matchCount || 0; a[1] += +x.winCount || 0; M += +x.matchCount || 0; W += +x.winCount || 0; }
+  if (M < 200) return null;
+  let c = 0; const e = [0, 0], l = [0, 0];
+  for (const k of Object.keys(t).map(Number).sort((a, b) => a - b)) { const a = t[k]; if (c < M / 3) { e[0] += a[0]; e[1] += a[1]; } else if (c >= 2 * M / 3) { l[0] += a[0]; l[1] += a[1]; } c += a[0]; }
+  return {m: M, wr: W / M, lean: e[0] && l[0] ? (l[1] / l[0] - e[1] / e[0]) * 100 : 0};
+}
+// Past weeks are final, so each (hero, position, rank, week) partial is cached without a TTL.
+function addPartial(o, P) {
+  for (const k of ['w', 'v', 'lv', 'lt']) for (const h in P[k]) { const a = o[k][h] || (o[k][h] = [0, 0]); a[0] += P[k][h][0]; a[1] += P[k][h][1]; }
+}
+let pwPruned = false;
+function prunePastWeeks(w0) {
+  if (pwPruned) return; pwPruned = true;
+  try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith('pw1:') && +k.split(':').pop() < w0 - 6) localStorage.removeItem(k); } } catch (e) {}
+}
+async function weekPartial(id, pos, br, rk, wk) {
+  const ck = 'pw1:' + (rk || 'all') + ':p' + pos + ':' + id + ':' + wk;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && c.w) return c; } catch (e) {}
+  const x = `, week: ${wk * WK_SEC}`, P = {w: {}, v: {}, lv: {}, lt: {}, sr: []};
+  const chk = rows => { for (const r of rows || []) if (r.week != null && +r.week !== wk) throw new Error('в ответе неделя ' + r.week + ' вместо ' + wk); };
+  const d = await gq(`{ heroStats { matchUp(heroId: ${id}${br}${x}, take: 150) { heroId with { heroId2 week matchCount winCount } vs { heroId2 week matchCount winCount } } } }`);
+  for (const row of d.heroStats.matchUp || []) if (row.heroId == id) { chk(row.with); chk(row.vs); merge(P.w, row.with); merge(P.v, row.vs); }
+  await sleep(80);
+  const a = await gq(`{ heroStats { laneOutcome(heroId: ${id}, isWith: false${br}${x}, positionIds: [POSITION_${pos}]) { heroId2 week matchCount winCount } } }`);
+  chk(a.heroStats.laneOutcome); merge(P.lv, a.heroStats.laneOutcome);
+  await sleep(80);
+  const b = await gq(`{ heroStats { laneOutcome(heroId: ${id}, isWith: true${br}${x}, positionIds: [POSITION_${pos}]) { heroId2 week matchCount winCount } } }`);
+  chk(b.heroStats.laneOutcome); merge(P.lt, b.heroStats.laneOutcome);
+  await sleep(80);
+  const s = await gq(`{ heroStats { stats(heroIds: [${id}]${br}${x}, positionIds: [POSITION_${pos}], groupByTime: true) { week time matchCount winCount } } }`);
+  chk(s.heroStats.stats); P.sr = (s.heroStats.stats || []).map(r => ({time: r.time, matchCount: +r.matchCount || 0, winCount: +r.winCount || 0}));
+  if (Object.keys(P.v).length || Object.keys(P.lv).length) { try { localStorage.setItem(ck, JSON.stringify(P)); } catch (e) {} }
+  return P;
+}
+async function loadHeroStatic(id) {
+  const pos = S.myPos, version = recPosVersion, rk = curRank(), key = rk + '/' + id;
+  const f = SF[key] || (SF[key] = await fetchJson('data/' + rk + '/' + id + '.json'));
+  const o = {t: Date.now(), w: f.w, v: f.v, lv: {}, lt: {}, p: null};
+  if (f.weeks && f.weeks.length) o.wk = {n: f.weeks.length, min: Math.min(...f.weeks), max: Math.max(...f.weeks)};
+  const s = f.pos && f.pos[pos];
+  if (s) { o.lv = s.lv; o.lt = s.lt; o.p = timeStats(s.sr.map(([time, matchCount, winCount]) => ({time, matchCount, winCount}))); }
+  if (version !== recPosVersion) return;
+  D[id] = o;
+}
+async function loadPosStatic() {
+  const rk = curRank(), pk = 'S:' + rk; if (posKey === pk) return;
+  posKey = pk; posErr = ''; posxErr = ''; for (const k in POSD) delete POSD[k]; for (const k in POSX) delete POSX[k]; for (const k in CCR) delete CCR[k];
+  try { const f = SF[rk + '/pos'] || (SF[rk + '/pos'] = await fetchJson('data/' + rk + '/pos.json')); Object.assign(POSD, f.pos); Object.assign(POSX, f.x || {}); ccRanks(); }
+  catch (e) { posErr = e.message; }
+}
+async function loadHero(id) {
+  if (STATIC) return loadHeroStatic(id);
+  const pos = S.myPos, version = recPosVersion;
+  const ck = 'mu12:' + (lsGet(RK) || 'all') + ':n' + WKN + ':p' + pos + ':' + id;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < 432e5) { D[id] = c; return; } } catch (e) {}
+  const rk = lsGet(RK), br = rk && rk !== 'all' ? `, bracketBasicIds: [${rk}]` : '';
+  // STRATZ HeroStatsQuery.matchUp does not accept positionIds.
+  // Keep matchup/synergy data global; laneOutcome and stats below remain position-filtered.
+  const d = await gq(`{ heroStats { matchUp(heroId: ${id}${br}, take: 150) { heroId with { heroId2 week matchCount winCount } vs { heroId2 week matchCount winCount } } } }`);
+  const o = {t: Date.now(), w: {}, v: {}, lv: {}, lt: {}, p: null};
+  for (const row of d.heroStats.matchUp || []) if (row.heroId == id) { const cw = weekCut(row.with), cv = weekCut(row.vs); o.wk = mergeWk(mergeWk(o.wk, cw.info), cv.info); merge(o.w, cw.rows); merge(o.v, cv.rows); }
+  let srAll = null;
+  try {
+    await sleep(80);
+    const a = await gq(`{ heroStats { laneOutcome(heroId: ${id}, isWith: false${br}, positionIds: [POSITION_${pos}]) { heroId2 week matchCount winCount lossCount } } }`);
+    { const c = weekCut(a.heroStats.laneOutcome); o.wk = mergeWk(o.wk, c.info); merge(o.lv, c.rows); }
+    await sleep(80);
+    const b = await gq(`{ heroStats { laneOutcome(heroId: ${id}, isWith: true${br}, positionIds: [POSITION_${pos}]) { heroId2 week matchCount winCount lossCount } } }`);
+    { const c = weekCut(b.heroStats.laneOutcome); o.wk = mergeWk(o.wk, c.info); merge(o.lt, c.rows); }
+  } catch (e) { o.laneErr = 'линия: ' + e.message; }
+  try {
+    await sleep(80);
+    const s = await gq(`{ heroStats { stats(heroIds: [${id}]${br}, positionIds: [POSITION_${pos}], groupByTime: true) { week time matchCount winCount } } }`);
+    { const c = weekCut(s.heroStats.stats); o.wk = mergeWk(o.wk, c.info); srAll = c.rows; o.p = timeStats(c.rows); }
+  } catch (e) { o.statErr = 'позиция: ' + e.message; }
+  // More weeks: the default queries above return only the CURRENT (partial) week; `week` takes epoch seconds of the week start and is exact.
+  const cur = o.wk ? o.wk.max : null;
+  if (cur != null) {
+    o.w0 = cur; prunePastWeeks(cur);
+    const got = [cur], failed = [];
+    for (let i = 1; i < WKN; i++) {
+      const wk = cur - i;
+      try {
+        const P = await weekPartial(id, pos, br, rk, wk);
+        if (Object.keys(P.v).length || Object.keys(P.lv).length) { addPartial(o, P); if (srAll) srAll = srAll.concat(P.sr); got.push(wk); } else failed.push(wk);
+      } catch (e) { failed.push(wk); }
+      await sleep(80);
+    }
+    if (srAll && got.length > 1) o.p = timeStats(srAll);
+    o.wk = {n: got.length, min: Math.min(...got), max: cur};
+    if (failed.length) o.wkErr = failed;
+  }
+  if (version !== recPosVersion) return;
+  D[id] = o;
+  try { localStorage.setItem(ck, JSON.stringify(o)); } catch (e) {}
+}
+async function ensure() {
+  if ((!STATIC && provider() !== 'stratz') || !H.length) return;
+  if (busy) { again = true; return; }
+  busy = true; loadErr = '';
+  try {
+    await loadPosDist(); dmgErr = ''; await loadDmg(); render();
+    for (const id of [...S.pool]) {
+      if (D[id]) continue;
+      try { await loadHero(id); } catch (e) { loadErr = e.message; break; }
+      renderRecs();
+      await new Promise(r => setTimeout(r, 120));
+    }
+  } finally { busy = false; renderRecs(); if (again) { again = false; ensure(); } }
+}
+const laneBase = m => { let n = 0, e = 0; for (const k in m) { n += m[k][0]; e += m[k][1]; } return n ? e / n : 0; };
+const lanePp = (a, lb) => ((a[1] + lb * 150) / (a[0] + 150) - lb) * 100;
+const CW = {1: 1.5, 2: 1.2, 3: 1, 4: 1, 5: 1.1};
+// Lane weights depend on MY position. opp: how much an enemy hero of position X matters for my lane;
+// mate: how much an ally of position X matters as my lane partner. Row 3 equals the old fixed weights.
+// Safe lane (1+5) faces enemy offlane (3+4); offlane (3+4) faces enemy safe lane (1+5); mid faces mid.
+// Starting numbers are hand-tuned guesses: tweak them here.
+const LANE = {
+  1: {opp: {1: 0.2, 2: 0.2, 3: 1.5, 4: 1.3, 5: 0.2}, mate: {1: 0.15, 2: 0.1, 3: 0.15, 4: 0.15, 5: 1}},
+  2: {opp: {1: 0.3, 2: 1.5, 3: 0.3, 4: 0.5, 5: 0.3}, mate: {1: 0.15, 2: 0.15, 3: 0.15, 4: 0.15, 5: 0.15}},
+  3: {opp: {1: 1.5, 2: 0.2, 3: 0.2, 4: 0.6, 5: 1.3}, mate: {1: 0.15, 2: 0.1, 3: 0.15, 4: 1, 5: 0.3}},
+  4: {opp: {1: 1.2, 2: 0.2, 3: 0.5, 4: 0.2, 5: 1.2}, mate: {1: 0.15, 2: 0.1, 3: 1, 4: 0.15, 5: 0.3}},
+  5: {opp: {1: 0.2, 2: 0.2, 3: 1.5, 4: 1.3, 5: 0.2}, mate: {1: 1, 2: 0.1, 3: 0.15, 4: 0.15, 5: 0.15}}
+};
+const laneW = p => (LANE[S.myPos] || LANE[3]).opp[p] ?? 0.3;
+const mateW = p => (LANE[S.myPos] || LANE[3]).mate[p] ?? 0.3;
+function wmean(list) { let s = 0, w = 0; for (const x of list) { s += x.dl * x.w; w += x.w; } return w ? s / w : 0; }
+function evidenceMean(list, saturation = 1.5) { const weight = list.reduce((sum, x) => sum + x.w, 0); return wmean(list) * Math.min(1, weight / saturation); }
+function rolePrior(id) {
+  const r = roles(id), has = x => r.includes(x) ? 1 : 0, sup = has('Support');
+  const t = [0.3 + 2 * has('Carry') - 1.5 * sup, 0.3 + 1.2 * has('Nuker') + 0.8 * has('Escape') + 0.5 * has('Carry') - sup, 0.3 + 1.5 * has('Durable') + 1.2 * has('Initiator') - sup, 0.3 + 1.5 * sup + 0.5 * has('Nuker') + 0.5 * has('Disabler'), 0.3 + 2 * sup + 0.3 * has('Disabler')].map(x => Math.max(x, 0.05));
+  const z = t.reduce((a, b) => a + b, 0); return t.map(x => x / z);
+}
+const POSD = {}, POSX = {}, CCR = {}; let posKey = null, posErr = '', posxErr = '';
+// POSD[hero] = matches per position. POSX[hero][pos] = per-position damage/control sums (weighted by matches).
+const CC_CUT = 0.6; // a hero counts as a real disabler if its control ranks in the top 40% of all hero-position rows
+function ccRanks() {
+  for (const k in CCR) delete CCR[k];
+  const rows = [];
+  for (const id in POSX) for (const p in POSX[id]) { const q = POSX[id][p]; if (q.n >= 200) rows.push({id, p, v: q.cc / q.n}); }
+  if (rows.length < 20) return;
+  const s = rows.map(r => r.v).sort((a, b) => a - b);
+  for (const r of rows) { let lo = 0, hi = s.length; while (lo < hi) { const m = (lo + hi) >> 1; if (s[m] < r.v) lo = m + 1; else hi = m; } (CCR[r.id] || (CCR[r.id] = {}))[r.p] = lo / s.length; }
+}
+async function loadPosDist() {
+  if (STATIC) return loadPosStatic();
+  const rk = lsGet(RK) || 'all', pk = rk + ':n' + WKN; if (posKey === pk) return;
+  posKey = pk; posErr = ''; posxErr = ''; for (const k in POSD) delete POSD[k]; for (const k in POSX) delete POSX[k]; for (const k in CCR) delete CCR[k];
+  const ck = 'pd10:' + pk;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < 864e5) { Object.assign(POSD, c.d); Object.assign(POSX, c.x || {}); ccRanks(); return; } } catch (e) {}
+  const br = rk !== 'all' ? `, bracketBasicIds: [${rk}]` : '';
+  const fq = (x, e) => `{ heroStats { stats(groupByPosition: true${br}${x}) { heroId position week matchCount${e ? ' physicalDamage magicalDamage pureDamage disableDuration stunDuration' : ''} } } }`;
+  let rows, ext = true;
+  try { rows = (await gq(fq('', true))).heroStats.stats; }
+  catch (e) {
+    ext = false; posxErr = e.message;
+    try { rows = (await gq(fq('', false))).heroStats.stats; } catch (e2) { posErr = e2.message; return; }
+  }
+  rows = rows || [];
+  const cur = weekCut(rows).info ? weekCut(rows).info.max : null;
+  if (cur != null) for (let i = 1; i < WKN; i++) {
+    try { await sleep(80); const r = (await gq(fq(`, week: ${(cur - i) * WK_SEC}`, ext))).heroStats.stats || []; if (r.every(x => x.week == null || +x.week === cur - i)) rows = rows.concat(r); } catch (e) {}
+  }
+  for (const x of rows) {
+    const m = /POSITION_(\d)/.exec(x.position || ''); if (!m) continue;
+    const id = x.heroId, p = +m[1], c = +x.matchCount || 0; if (!c) continue;
+    const a = POSD[id] || (POSD[id] = [0, 0, 0, 0, 0]); a[p - 1] += c;
+    if (ext) {
+      const h = POSX[id] || (POSX[id] = {}), q = h[p] || (h[p] = {n: 0, ph: 0, mg: 0, pu: 0, cc: 0});
+      q.n += c; q.ph += (+x.physicalDamage || 0) * c; q.mg += (+x.magicalDamage || 0) * c; q.pu += (+x.pureDamage || 0) * c;
+      q.cc += ((+x.disableDuration || 0) || (+x.stunDuration || 0)) * c;
+    }
+  }
+  ccRanks();
+  try { localStorage.setItem(ck, JSON.stringify({t: Date.now(), d: POSD, x: POSX})); } catch (e) {}
+}
+// Damage split / control of a hero ON a given position; falls back to the all-positions numbers (DMG) and to role tags.
+const dmgFor = (id, p) => { const q = POSX[id] && POSX[id][p]; if (q && q.n >= 150) { const t = q.ph + q.mg + q.pu; if (t > 0) return {p: q.ph / t, w: t / q.n, x: 1}; } return DMG[id]; };
+const isDisabler = (id, p) => { const r = CCR[id] && CCR[id][p]; return r != null ? r >= CC_CUT : roles(id).includes('Disabler'); };
+const hasRole = (id, r, p) => r === 'Disabler' ? isDisabler(id, p) : roles(id).includes(r);
+function posP(id, p) { const a = POSD[id], t = a ? a.reduce((x, y) => x + y, 0) : 0; return t > 50 ? a[p - 1] / t : rolePrior(id)[p - 1]; }
+function guessTeam(team) {
+  const ids = S[team], fixed = {}, free = [], used = new Set();
+  if (team === 'ally' && S.me != null) used.add(S.myPos);
+  ids.forEach((id, i) => {
+    if (id == null) return;
+    const m = S.apos[team][i] || (team === 'ally' && S.me === i ? S.myPos : 0);
+    if (m) { fixed[i] = m; used.add(m); } else free.push(i);
+  });
+  const avail = [1, 2, 3, 4, 5].filter(p => !used.has(p));
+  let best = null, bs = -1e9;
+  const go = (k, left, cur, sc) => {
+    if (k === free.length) { if (sc > bs) { bs = sc; best = cur.slice(); } return; }
+    for (const p of left) { cur[k] = p; go(k + 1, left.filter(x => x !== p), cur, sc + Math.log(posP(ids[free[k]], p) + 0.02)); }
+  };
+  if (free.length <= avail.length) go(0, avail, [], 0);
+  const res = Array(5).fill(null);
+  for (const i in fixed) res[i] = {p: fixed[i], auto: false};
+  free.forEach((i, k) => {
+    let p = best ? best[k] : 0;
+    if (!p) { let m = -1; for (let q = 1; q <= 5; q++) if (posP(ids[i], q) > m) { m = posP(ids[i], q); p = q; } }
+    res[i] = {p, auto: true};
+  });
+  return res;
+}
+function renderPos() {
+  for (const t of ['ally', 'enemy']) {
+    const g = guessTeam(t);
+    $(t + 'Pos').innerHTML = S[t].map((id, i) => {
+      if (id == null) return '<span></span>';
+      const me = t === 'ally' && S.me === i, man = S.apos[t][i];
+      const opts = `<option value="">${me ? S.myPos + ' (я)' : 'авто: ' + (g[i].p || '?')}</option>` + [1, 2, 3, 4, 5].map(p => `<option value="${p}"${man === p ? ' selected' : ''}>${p}</option>`).join('');
+      return `<select data-pt="${t}" data-pi="${i}" class="${man ? 'man' : ''}"${me ? ' disabled' : ''} aria-label="Позиция героя">${opts}</select>`;
+    }).join('');
+  }
+}
+const DMG = {}; let dmgBusy = false, dmgErr = '';
+async function loadDmg() {
+  if (STATIC || provider() !== 'stratz' || dmgBusy || dmgErr || !H.length) return;
+  const ids = [...new Set([...S.pool, ...S.ally, ...S.enemy])].filter(x => x != null && !DMG[x]); if (!ids.length) return;
+  dmgBusy = true;
+  try {
+    const rk = lsGet(RK), br = rk && rk !== 'all' ? `, bracketBasicIds: [${rk}]` : '';
+    const d = await gq(`{ heroStats { stats(heroIds: [${ids.join(',')}]${br}) { heroId matchCount physicalDamage magicalDamage pureDamage } } }`), g = {};
+    for (const x of d.heroStats.stats || []) { const a = g[x.heroId] || (g[x.heroId] = [0, 0, 0, 0]), m = +x.matchCount || 0; a[0] += (+x.physicalDamage || 0) * m; a[1] += (+x.magicalDamage || 0) * m; a[2] += (+x.pureDamage || 0) * m; a[3] += m; }
+    for (const id of ids) { const a = g[id], t = a ? a[0] + a[1] + a[2] : 0; DMG[id] = t > 0 && a[3] ? {p: a[0] / t, w: t / a[3]} : {none: 1}; }
+  } catch (e) { dmgErr = String(e.message || 'ошибка'); }
+  dmgBusy = false; render();
+}
+function recommend() {
+  const E = S.enemy.filter(x => x != null), A = S.ally.filter((x, i) => x != null && i !== S.me);
+  const PE = guessTeam('enemy'), PA = guessTeam('ally'), pe = {}, pa = {};
+  S.enemy.forEach((id, i) => { if (id != null) pe[id] = PE[i].p; });
+  S.ally.forEach((id, i) => { if (id != null && i !== S.me) pa[id] = PA[i].p; });
+  const used = new Set([...S.ally.filter((x, i) => i !== S.me), ...S.enemy]);
+  const need = ['Initiator', 'Disabler', 'Durable'].filter(r => !A.some(a => hasRole(a, r, pa[a])));
+  const wRob = Math.max(0, 1 - E.length / 4), out = [];
+  const fb = id => { const r = roles(id); return {p: r.includes('Nuker') ? 0.4 : r.includes('Carry') ? 0.85 : 0.65, w: 1, fb: 1}; };
+  const real = A.map(a => dmgFor(a, pa[a])).filter(x => x && !x.none), dA = real.length >= 2 ? real : A.map(fb), dW = dA.reduce((q, x) => q + x.w, 0), lean = dA.length >= 2 && dW ? dA.reduce((q, x) => q + x.p * x.w, 0) / dW - 0.5 : 0;
+  const laneMatePos = ({1:5, 3:4, 4:3, 5:1})[S.myPos];
+  const mate = laneMatePos ? S.ally.find((a, i) => a != null && i !== S.me && PA[i].p === laneMatePos) : null, mAt = mate != null && byId[mate] ? byId[mate].attack_type : null;
+  for (const id of S.pool) {
+    const d = D[id]; if (!d || used.has(id)) continue;
+    const base = baseWr(d), lb = laneBase(d.lv || {}), tb = laneBase(d.lt || {});
+    // Weight matchup/synergy evidence by sample reliability, so tiny samples cannot dominate.
+    const cl = E.filter(e => d.v[e] && d.v[e][0] > 0).map(e => ({
+      e, w: (CW[pe[e]] ?? 1) * d.v[e][0] / (d.v[e][0] + K),
+      dl: (wr(d.v[e], base) - base) * 100
+    }));
+    const sl = A.filter(a => d.w[a] && d.w[a][0] > 0).map(a => ({
+      a, w: d.w[a][0] / (d.w[a][0] + K),
+      dl: (wr(d.w[a], base) - base) * 100
+    }));
+    const ll = E.filter(e => d.lv && d.lv[e] && d.lv[e][0] > 0).map(e => ({
+      e, w: laneW(pe[e]) * d.lv[e][0] / (d.lv[e][0] + 150),
+      dl: lanePp(d.lv[e], lb)
+    }));
+    const pl = A.filter(a => d.lt && d.lt[a] && d.lt[a][0] > 0).map(a => ({
+      a, w: mateW(pa[a]) * d.lt[a][0] / (d.lt[a][0] + 150),
+      dl: lanePp(d.lt[a], tb)
+    }));
+    let bad = 0, tot = 0;
+    for (const k in d.v) {
+      if (d.v[k][0] < 100) continue;
+      tot++;
+      if (d.v[k][1] / d.v[k][0] < base - 0.03) bad++;
+    }
+    const rob = -(tot ? bad / tot - 0.12 : 0) * 10 * wRob;
+    const cover = need.filter(r => hasRole(id, r, S.myPos));
+    const pw = d.p ? d.p.wr : null;
+    // Prefer heroes actually played on the chosen position.
+    const posShare = posP(id, S.myPos);
+    const posFit = Math.max(-1.5, Math.min(2.5, (posShare - 0.2) * 4));
+    // Shrink position win rate toward 50% to reduce overreaction to limited samples.
+    const posSample = d.p ? d.p.m : 0;
+    const reliablePw = pw == null ? base : (pw * posSample + 0.5 * 200) / (posSample + 200);
+    const matchupScore = evidenceMean(cl, 1.5);
+    const synergyScore = 0.75 * evidenceMean(sl, 1.5);
+    // Slightly increase lane impact, while keeping matchup and overall hero strength important.
+    const enemyLaneScore = 0.32 * evidenceMean(ll, 1.5);
+    const allyLaneScore = 0.16 * evidenceMean(pl, 1.5);
+    const laneScore = enemyLaneScore + allyLaneScore;
+    const roleScore = Math.min(2.4, cover.length * 0.8);
+    const dc = dmgFor(id, S.myPos), dp = dc && !dc.none ? dc.p : byId[id] ? fb(id).p : null, dmgFit = dp != null && lean ? Math.max(-1.2, Math.min(1.2, -lean * (dp - 0.5) * 10)) : 0;
+    const laneMix = mAt && byId[id] && byId[id].attack_type && byId[id].attack_type !== mAt ? 0.8 : 0;
+    const winrateScore = (reliablePw - 0.5) * 100;
+    const total = winrateScore
+      + matchupScore + synergyScore + laneScore + rob + roleScore + posFit + laneMix + dmgFit;
+    out.push({
+      id, base, pw, lean: d.p ? d.p.lean : null, cl, sl, ll, pl, bad, tot, cover,
+      posShare, posFit, laneMix, mate, dmgFit, dp, dmgFb: real.length < 2 ? 1 : 0, reliablePw, winrateScore, matchupScore, synergyScore,
+      enemyLaneScore, allyLaneScore, laneScore, roleScore, rob, total
+    });
+  }
+  return out.sort((a, b) => b.total - a.total);
+}
+function pickHero(id) {
+  let i = S.me;
+  if (i == null) { i = S.ally.indexOf(null); if (i < 0) return; S.me = i; }
+  S.ally[i] = id; S.apos.ally[i] = null; S.chosen = id; S.fresh = 'ally' + i; S.panel = true; S.after = null; GErr = ''; for (const k in GL) if (!G[k]) delete GL[k]; if (B[buildMemKey(id)] && B[buildMemKey(id)].err) { delete B[buildMemKey(id)]; BL[buildMemKey(id)] = 0; } render();
+}
+function tipsFor(id, pos) {
+  const h = byId[id] || {}, r = h.roles || [], t = [];
+  if (pos === 1 || r.includes('Carry')) t.push('керри: выигранная линия важнее ранних киллов, не давай ему спокойно фармить');
+  if (h.attack_type === 'Ranged') t.push('дальнобойный: будет харасить, держись ближе к своим крипам и не меняйся ударами без нужды');
+  if (r.includes('Disabler')) t.push('есть контроль: не стой в лайне один без видения');
+  if (r.includes('Nuker')) t.push('есть бёрст: не оставляй себе мало хп рядом с ним');
+  if (r.includes('Escape')) t.push('умеет уходить: убийство в лайне закрыть трудно');
+  if ((pos === 4 || pos === 5) && r.includes('Support')) t.push('саппорт: сначала выбивай его с лайна, тогда керри останется без прикрытия');
+  return t.slice(0, 3);
+}
+const G = {}, GL = {}; let GErr = '';
+const sigOK = i => { const c = ITM[i]; return !c || c[2] >= 400 || /aghanim's shard/i.test(c[0]); };
+const MS = {}, TARGET = 300, CST = {hero: null, i: 0, n: 0, got: 0, msg: ''};
+let CBusy = false, CT = null, DBOK = false, DBL = false, IDBH = null;
+const RK_T = {HERALD_GUARDIAN: [1, 2], CRUSADER_ARCHON: [3, 4], LEGEND_ANCIENT: [5, 6], DIVINE_IMMORTAL: [7, 8]};
+const rankOK = m => { const rk = lsGet(RK) || 'all'; return rk === 'all' || !m.r || RK_T[rk].includes(Math.floor(m.r / 10)); };
+function dbOpen() { return new Promise(res => { try { const r = indexedDB.open('drafter', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => { IDBH = r.result; DBOK = true; res(true); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
+const dbReq = (mode, f) => new Promise((res, rej) => { const t = IDBH.transaction('h', mode), r = f(t.objectStore('h')); t.oncomplete = () => res(r.result); t.onerror = () => rej(t.error); });
+async function dbLoad() {
+  if (DBL) return; DBL = true;
+  if (!(await dbOpen())) return;
+  try { for (const k of await dbReq('readonly', s => s.getAllKeys())) { const v = await dbReq('readonly', s => s.get(k)); if (v) MS[k] = v; } } catch (e) {}
+}
+async function dbSave(h) { if (DBOK) { try { await dbReq('readwrite', s => s.put(MS[h], String(h))); } catch (e) {} } }
+async function gqr(q) {
+  for (let a = 0; a < 4; a++) {
+    const r = await fetch('https://api.stratz.com/graphql', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + lsGet(SK)}, body: JSON.stringify({query: q})});
+    const txt = await r.text();
+    if (r.status === 429 || r.status >= 500) { await sleep(3000 * (a + 1)); continue; }
+    let j; try { j = JSON.parse(txt); } catch (e) { throw new Error('HTTP ' + r.status); }
+    if (!j.data) throw new Error(j.errors ? j.errors[0].message : 'HTTP ' + r.status);
+    return j.data;
+  }
+  throw new Error('Stratz ограничил запросы, попробуй позже');
+}
+const posNum = x => { const q = /POSITION_(\d)/.exec((x && x.position) || ''); return q ? +q[1] : 0; };
+const keyId = id => {
+  let best = null;
+  for (const c of ITC[id] || []) { const it = ITM[c]; if (!it || it[2] < 1000 || /^recipe/.test(it[3] || '') || !(ITC[c] && ITC[c].length)) continue; if (!best || it[2] > ITM[best][2]) best = c; }
+  return best;
+};
+function parseMatch(g, m, h) {
+  if (!m || !m.me || !m.me.length) return null;
+  const me = m.me.find(x => x.heroId == h); if (!me) return null;
+  const mp = posNum(me); if (mp && mp !== 3) return null;
+  const al = [], en = []; let skipped = false;
+  for (const p of m.pl || []) {
+    if (p.isRadiant === me.isRadiant) { if (!skipped && p.heroId == h) { skipped = true; continue; } al.push([p.heroId, posNum(p)]); } else en.push([p.heroId, posNum(p)]);
+  }
+  const fin = new Set([0, 1, 2, 3, 4, 5].map(i => me['item' + i + 'Id']).concat([0, 1, 2].map(i => me['backpack' + i + 'Id'])).filter(Boolean));
+  const ev = (me.stats && me.stats.itemPurchases) || [], first = {};
+  for (const x of ev) if (x.time > 0 && first[x.itemId] == null) first[x.itemId] = x.time;
+  const sid = ITN["aghanim's shard"], cons = new Set(), up = {};
+  for (const b in first) { const B = +b, kc = keyId(B); for (const a of ITC[B] || []) if (first[a] != null && first[a] < first[B]) { if (a === kc) up[B] = a; else cons.add(a); } }
+  const seq = [];
+  for (const a in first) {
+    const A = +a, it = ITM[A]; if (cons.has(A)) continue;
+    if (it && (/^recipe/.test(it[3] || '') || it[2] < 400)) continue;
+    seq.push([A, first[A], up[A] || 0, fin.has(A) ? 1 : 0]);
+  }
+  seq.sort((a, b) => a[1] - b[1]);
+  return {id: g.matchId, ts: m.startDateTime || 0, w: m.didRadiantWin === me.isRadiant ? 1 : 0, r: m.rank || m.averageRank || 0, d: m.durationSeconds || 0, al, en, fin: [...fin], seq, st: ev.filter(x => x.time <= 0).map(x => x.itemId), ne: me.neutral0Id || 0, sh: sid && first[sid] ? first[sid] : 0};
+}
+async function fetchMatches(part, h) {
+  const body = part.map((g, k) => `m${k}: match(id: ${g.matchId}) { rank averageRank didRadiantWin durationSeconds startDateTime pl: players { heroId isRadiant position } me: players(steamAccountId: ${g.steamAccountId}) { heroId isRadiant position item0Id item1Id item2Id item3Id item4Id item5Id backpack0Id backpack1Id backpack2Id neutral0Id stats { itemPurchases { time itemId } } } }`).join(' ');
+  const r = await gqr(`{ ${body} }`);
+  return part.map((g, k) => parseMatch(g, r['m' + k], h)).filter(Boolean);
+}
+async function collectHero(h) {
+  const cp = activeBuildPos(h);
+  const d = MS[h] || (MS[h] = {t: 0, ms: [], done: false, total: 0});
+  if (d.v !== 20 || d.pos !== cp) { d.ms = []; d.v = 20; d.pos = cp; d.done = false; d.total = 0; }
+  const known = new Set(d.ms.map(m => m.id)), cand = [];
+  let skip = 0, pages = 0;
+  while (cand.length < TARGET && pages < 8) {
+    const r = await gqr(`{ heroStats { guide(heroId: ${h}, positionId: POSITION_${cp}) { heroId matchCount guides(take: 100, skip: ${skip}) { matchId steamAccountId } } } }`);
+    const rows = r.heroStats.guide || [], row = rows.find(x => x.heroId == h) || rows[0]; if (!row) break;
+    d.total = +row.matchCount || d.total;
+    const gl = row.guides || []; if (!gl.length) break;
+    let fresh = 0; for (const g of gl) if (!known.has(g.matchId)) { cand.push(g); fresh++; }
+    if (gl.length < 100 || (known.size && !fresh)) break;
+    skip += 100; pages++; await sleep(350);
+  }
+  let bs = 4, i = 0, k = 0;
+  cand.length = Math.min(cand.length, TARGET);
+  while (i < cand.length) {
+    const part = cand.slice(i, i + bs);
+    try { d.ms.push(...await fetchMatches(part, h)); i += part.length; CST.got = d.ms.length; renderColl(); }
+    catch (e) { if (/complex/i.test(e.message) && bs > 1) { bs >>= 1; continue; } if (recs.length >= 100) { partial = true; break; } throw e; }
+    if (++k % 8 === 0) await dbSave(h);
+    await sleep(350);
+  }
+  d.ms.sort((a, b) => b.ts - a.ts); d.ms = d.ms.slice(0, TARGET); d.t = Date.now(); d.done = true;
+  await dbSave(h);
+}
+const stale = h => { const d = MS[h]; return !d || !d.done || d.v !== 20 || d.pos !== activeBuildPos(h) || Date.now() - d.t > 6048e5; };
+async function collectAll() {
+  if (CBusy || provider() !== 'stratz' || !H.length) return;
+  CBusy = true; CST.msg = '';
+  try {
+    await dbLoad(); await loadItems();
+    for (let round = 0; round < 3; round++) {
+      const todo = [...S.pool].filter(stale); if (!todo.length) break;
+      for (let i = 0; i < todo.length; i++) { CST.hero = todo[i]; CST.i = i; CST.n = todo.length; CST.got = MS[todo[i]] ? MS[todo[i]].ms.length : 0; renderColl(); await collectHero(todo[i]); render(); }
+    }
+    CST.msg = 'Сбор завершён.';
+  } catch (e) { CST.msg = 'Сбор остановлен: ' + e.message; }
+  CBusy = false; CST.hero = null; renderColl(); render();
+}
+function renderColl() {
+  const el = $('collst'), bar = $('colbar'); if (!el) return;
+  const have = [...S.pool].filter(h => MS[h] && MS[h].ms.length), tot = have.reduce((q, h) => q + MS[h].ms.length, 0);
+  if (CBusy && CST.hero != null) {
+    el.textContent = `Собираю матчи: ${nm(CST.hero)} (${CST.i + 1} из ${CST.n}), собрано ${CST.got} из ${TARGET}.`;
+    bar.style.width = Math.round(100 * (CST.i + Math.min(1, CST.got / TARGET)) / (CST.n || 1)) + '%';
+  } else {
+    el.textContent = `В базе героев пула: ${have.length} из ${S.pool.size}, матчей ${tot}. ${DBOK ? '' : 'Память браузера недоступна, сохрани статистику в файл, иначе при закрытии она пропадёт. '}${CST.msg}`;
+    bar.style.width = S.pool.size ? Math.round(100 * have.length / S.pool.size) + '%' : '0%';
+  }
+}
+/* ===== Движок билда v2: винрейты Stratz + лифт по реальным матчам + механика врагов ===== */
+const AB = {}; let ABS = 0;
+async function loadAbil() {
+  if (ABS || !H.length) return; ABS = 1;
+  try {
+    let c = null; try { c = JSON.parse(localStorage.getItem('ab4') || 'null'); } catch (e) {}
+    if (!c || Date.now() - c.t > 6048e5) {
+      const [ha, ab] = await Promise.all(['hero_abilities', 'abilities'].map(n => fetch('https://api.opendota.com/api/constants/' + n).then(r => r.json()))), m = {};
+      for (const h of H) {
+        const a = {cc: [], mg: 0, ph: 0, ev: [], hl: [], iv: 0, sp: 0, sv: []};
+        for (const an of (ha[h.name] || {}).abilities || []) {
+          const x = ab[an]; if (!x || /hidden|empty/.test(an)) continue;
+          const bh = [].concat(x.behavior || []).join(' '), n = x.dname || an, dt = String(x.dmg_type || ''), ks = (x.attrib || []).map(q => q.key).join(' '), tt = [].concat(x.target_team || []).join(' '), toEn = /Enemy|Both/.test(tt) || (!tt && /AOE|Point|No Target/.test(bh));
+          if (/Passive/.test(bh)) { if (/evasion|miss_chance/i.test(ks)) a.ev.push(n); continue; }
+          a.sp++;
+          if (!toEn && /unable to attack or be attacked|ethereal|invulnerab|untargetable|banish|extradimensional/i.test(String(x.desc || ''))) a.sv.push(n);
+          if (toEn && (/stun|silence|root|sleep|fear|taunt|disarm|ensnare|banish|cyclone|entangle|petrif/i.test(ks) || /\bhex\b/i.test(n))) a.cc.push([n, x.bkbpierce === 'Yes' ? 1 : 0, /Unit Target/.test(bh) ? 1 : 0]);
+          if (/Magical/.test(dt)) a.mg++; else if (/Physical/.test(dt)) a.ph++;
+          if (ks.split(' ').some(k => /heal|lifesteal/i.test(k) && !/amp/i.test(k))) a.hl.push(n);
+          if (/invis|fade_time/i.test(ks)) a.iv = 1;
+        }
+        m[h.id] = a;
+      }
+      c = {t: Date.now(), m}; try { localStorage.setItem('ab4', JSON.stringify(c)); } catch (e) {}
+    }
+    Object.assign(AB, c.m);
+  } catch (e) { ABS = 2; }
+  renderBuild();
+}
+function threats(E, A) {
+  const T = {cc: [], cp: [], tg: [], ev: [], hl: [], iv: [], sv: [], sup: 0, n: E.length, mg: 0, ph: 0}; let ms = 0;
+  for (const e of E) {
+    const a = AB[e.id], x = EN[e.id], n = nm(e.id);
+    if (a) { for (const c of a.cc) { const s = c[0] + ' (' + n + ')'; (c[1] ? T.cp : T.cc).push(s); if (c[2]) T.tg.push(s); } if (a.ev.length) T.ev.push(n); if (a.hl.length) T.hl.push(n); if (a.iv) T.iv.push(n); if (a.sv && a.sv.length) T.sv.push(a.sv[0] + ' (' + n + ')'); }
+    const s = x && !x.none ? x.ph + x.mg + x.pu : 0;
+    if (s > 0) { T.mg += x.mg / s; T.ph += x.ph / s; ms++; } else if (a && a.mg + a.ph) { T.mg += a.mg / (a.mg + a.ph); T.ph += a.ph / (a.mg + a.ph); ms++; }
+    if (e.p >= 4 && roles(e.id).includes('Support')) T.sup++;
+  }
+  if (ms) { T.mg /= ms; T.ph /= ms; }
+  T.na = A.length; T.nl = A.filter(a => roles(a.id).includes('Initiator')).length;
+  return T;
+}
+const uq = a => [...new Set(a)];
+const RULES = [
+  ['Black King Bar', T => T.cc.length >= 2 && [3 + T.cc.length, `блокирует контроль: ${T.cc.slice(0, 4).join(', ')}.${T.cp.length ? ' Пробивают БКБ: ' + T.cp.slice(0, 3).join(', ') + '.' : ''}`]],
+  ["Linken's Sphere", T => T.tg.length >= 2 && [2.5 + T.tg.length / 2, `одиночные опасные умения: ${T.tg.slice(0, 4).join(', ')}.`]],
+  ['Pipe of Insight', T => T.n >= 3 && T.mg >= 0.5 && [2.5 + T.mg * 4, `магического урона у врагов ~${Math.round(T.mg * 100)}%.`]],
+  ['Crimson Guard', T => T.n >= 3 && T.ph >= 0.6 && [2.5 + T.ph * 3, `физического урона у врагов ~${Math.round(T.ph * 100)}%.`]],
+  ['Assault Cuirass', T => T.n >= 3 && T.ph >= 0.6 && [2.5 + T.ph * 3, `физического урона у врагов ~${Math.round(T.ph * 100)}%.`]],
+  ["Heaven's Halberd", T => T.n >= 3 && T.ph >= 0.6 && [2.5 + T.ph * 2, 'много физического урона: дизарм главного бойца.']],
+  ['Nullifier', (T, X) => { const it = ['Ghost Scepter', 'Glimmer Cape', 'Force Staff', "Eul's Scepter of Divinity", 'Lotus Orb', 'Aeon Disk'].filter(n => X[n]), h = uq(it.flatMap(n => X[n])), n = h.length + T.sv.length; return n >= 2 && [2 + n, `враги сейвятся и баффаются${T.sv.length ? ': ' + T.sv.slice(0, 3).join(', ') : ''}${it.length ? '; часто берут ' + it.slice(0, 4).map(i => i + ' (' + uq(X[i]).join(', ') + ')').join(', ') : ''}.`]; }],
+  ['Spirit Vessel', T => T.hl.length >= 1 && [2 + T.hl.length / 2, `лечение у врагов: ${T.hl.slice(0, 3).join(', ')}.`]],
+  ['Monkey King Bar', (T, X) => { const h = uq([...T.ev, ...['Butterfly', 'Radiance'].flatMap(n => X[n] || [])]); return h.length >= 1 && [2.5 + h.length, `уклонение у врагов: ${h.join(', ')}.`]; }],
+  ['Blink Dagger', T => T.na >= 3 && T.nl === 0 && [3, 'среди ваших союзников нет инициации.']],
+  ['Ghost Scepter', T => T.n >= 3 && T.ph >= 0.7 && [2.5 + T.ph * 2, `почти весь урон врагов физический (~${Math.round(T.ph * 100)}%).`]],
+  ['Hood of Defiance', T => T.n >= 3 && T.mg >= 0.55 && [2.5 + T.mg * 3, `магического урона у врагов ~${Math.round(T.mg * 100)}%.`]],
+  ['Orchid Malevolence', T => T.sv.length >= 1 && [2 + T.sv.length + (T.sup >= 2 ? 0.5 : 0), `глушит сейвы и заклинания: ${T.sv.slice(0, 3).join(', ')}.`]],
+  ['Aeon Disk', T => T.n >= 4 && T.cc.length + T.cp.length >= 4 && [2.5 + (T.cc.length + T.cp.length) / 4, `у врагов много контроля (${T.cc.length + T.cp.length}): диск спасает от добивания после стана.`]],
+  ['Dust of Appearance', T => T.iv.length >= 1 && [3 + T.iv.length / 2, `невидимки у врагов: ${T.iv.join(', ')}.`]]
+];
+/* ===== STRATZ build v3: как dota2protracker. Pick%, WR и порядок по среднему времени покупки =====
+   Токен берётся из поля токена, хранится только в localStorage. */
+const BRKS = {DIVINE_IMMORTAL: 'Immortal', LEGEND_ANCIENT: 'Легенда–Властелин', CRUSADER_ARCHON: 'Рыцарь–Герой', HERALD_GUARDIAN: 'Рекрут–Страж', all: 'Все ранги'};
+let BRK = lsGet('buildBracket'), BP = +lsGet('buildPos') || 3, BPMODE = lsGet('buildPosMode') || 'auto';
+const activeBuildPos = id => BPMODE === 'auto' ? [1,2,3,4,5].sort((a,b) => posP(id,b) - posP(id,a))[0] : BP;
+if (!BRKS[BRK]) BRK = 'DIVINE_IMMORTAL';
+const BUILD_TTL = 7 * 24 * 60 * 60 * 1000;
+const buildMemKey = id => BRK + ':' + activeBuildPos(id) + ':' + id;
+const buildCacheKey = id => 'drafter:stratz-build:v7:' + buildMemKey(id);
+const CONSUMABLE = /^(town portal scroll|tango|healing salve|clarity|enchanted mango|faerie fire|blood grenade|dust of appearance|smoke of deceit|observer ward|sentry ward|ward dispenser|iron branch|cheese|refresher shard|gem of true sight|aegis of the immortal|tome of knowledge)$/i;
+const mn = s => Math.round(s / 60) + 'm';
+function buildPlan(data) {
+  const bf = data.boots.filter(x => ITM[x.id] && ITM[x.id][0] !== 'Boots of Speed'), bs = bf.reduce((s, x) => s + x.m, 0), T = Math.max(data.total || 1, bs), bootIds = new Set(data.boots.map(x => x.id));
+  let list = data.core.filter(x => x.t != null && ITM[x.id] && sigOK(x.id) && !bootIds.has(x.id) && ITM[x.id][0] !== 'Boots of Speed' && !CONSUMABLE.test(ITM[x.id][0]) && !/^recipe/.test(ITM[x.id][3] || ''))
+    .map(x => ({...x, p: Math.min(1, x.m / T)}));
+  list = list.filter(a => !list.some(b => b !== a && (ITC[b.id] || []).includes(a.id) && b.p >= 0.7 * a.p));
+  const core = list.filter(x => x.p >= 0.25).sort((a, b) => b.p - a.p).slice(0, 12).sort((a, b) => a.t - b.t);
+  const sit = list.filter(x => x.p >= 0.08 && x.p < 0.25).sort((a, b) => b.p - a.p).slice(0, 10);
+  const boots = bf.map(x => ({...x, p: x.m / (bs || 1)})).filter(x => x.p >= 0.05).slice(0, 4);
+  const mb = boots[0] && boots[0].t != null ? {...boots[0], p: Math.min(1, boots[0].m / T)} : null;
+  if (mb) core.push(mb);
+  for (const b of core.slice()) for (const n in (b.inst || {})) { const v = b.inst[n]; if (+n >= 2 && v.t != null && v.m / T >= 0.2) core.push({...b, t: v.t, m: v.m, wr: v.wr, p: Math.min(1, v.m / T), dup: +n}); }
+  core.sort((a, b) => a.t - b.t);
+  const pool = list.concat(mb ? [mb] : []).filter(x => x.r), cum = (x, lim) => x.r.reduce((s, [t, m]) => t <= lim ? s + m : s, 0) / T;
+  const inv = [['20–35 мин', 35, 400], ['35–55 мин', 55, 1400], ['55+ мин', 150, 2000]].map(([lb, lim, mc]) => {
+    let w = pool.filter(x => ITM[x.id][2] >= mc || x === mb).map(x => ({id: x.id, s: Math.min(1, cum(x, lim))})).filter(x => x.s >= 0.2);
+    w = w.filter(a => !w.some(b => b !== a && (ITC[b.id] || []).includes(a.id) && b.s >= 0.7 * a.s));
+    return [lb, w.sort((a, b) => b.s - a.s).slice(0, 6)];
+  });
+  return {core, sit, boots, T, bs, inv};
+}
+/* ===== Стартовые сборки: реальные закупы до 0:00 из матчей топ-игроков (STRATZ Guides) ===== */
+const SK2 = {}, SKL = {}, KIT_N = 600, KP = {}, KIT_TTL = 7 * 24 * 3600 * 1000;
+const kitKey = id => activeBuildPos(id) + ':' + id;
+function lsPut(k, v) {
+  for (let i = 0; i < 6; i++) {
+    try { localStorage.setItem(k, v); return; } catch (e) {
+      const ks = Object.keys(localStorage).filter(x => x.startsWith('drafter:stratz-kits:') && x !== k).map(x => { let t = 0; try { t = JSON.parse(localStorage.getItem(x)).t; } catch (_) {} return [x, t]; }).sort((a, b) => a[1] - b[1]);
+      if (!ks.length) return; localStorage.removeItem(ks[0][0]);
+    }
+  }
+}
+const KPEN = {'Iron Branch': 0, 'Gauntlets of Strength': 0, 'Slippers of Agility': 0, 'Mantle of Intelligence': 0, 'Circlet': 0, 'Tango': 200, 'Faerie Fire': 60};
+let KMODE = lsGet('kitMode') === 'est' ? 'est' : 'log';
+function estKit(ord, ds) {
+  const b = {}; ord.forEach(i => b[i] = (b[i] || 0) + 1);
+  const tg = {};
+  Object.keys(b).forEach(i => {
+    const d = (ds || {})[i], tot = d ? Object.values(d.h).reduce((s, x) => s + x, 0) : 0; let t = b[i];
+    if (d && tot >= 20) { const ks = Object.keys(d.h).map(Number).filter(k => k >= 2), multi = ks.reduce((s, k) => s + d.h[k], 0); if (multi / tot >= 0.1) t = Math.max(t, ks.sort((x, y) => d.h[y] - d.h[x])[0]); }
+    tg[i] = t;
+  });
+  const cost = () => Object.keys(tg).reduce((s, i) => s + tg[i] * (ITM[i][2] || 0), 0);
+  while (cost() > 600) { const c = Object.keys(tg).filter(i => tg[i] > b[i]).sort((x, y) => (ITM[y][2] || 0) - (ITM[x][2] || 0))[0]; if (c === undefined) break; tg[c]--; }
+  return [...new Set(ord)].flatMap(i => Array(tg[i]).fill(i));
+}
+// STRATZ itemStartingPurchase даёт частоты количества каждого предмета по герою/позиции,
+// но не связывает эти количества с конкретной комбинацией закупа. Поэтому используем
+// их только как осторожную поправку к пропущенным копиям и не меняем частоту самого кита.
+function addAggregateCopies(items, sq) {
+  if (!sq || !Object.keys(sq).length) return items;
+  const counts = {};
+  for (const [id, dist] of Object.entries(sq)) {
+    const vals = Object.entries(dist || {}).map(([n, v]) => [+n, +v]).filter(([n, v]) => n >= 1 && v > 0);
+    const total = vals.reduce((a, x) => a + x[1], 0);
+    if (total < 20) continue;
+    const maxN = Math.min(6, Math.max(1, ...vals.map(x => x[0])));
+    let atLeast = 0, target = 1, confidence = 0;
+    for (let n = maxN; n >= 1; n--) {
+      atLeast += (dist[n] || 0);
+      if (n > 1 && atLeast / total >= 0.15) { target = n; confidence = atLeast / total; break; }
+    }
+    if (target > 1) counts[id] = {target, confidence};
+  }
+  const qty = {}; items.forEach(id => qty[id] = (qty[id] || 0) + 1);
+  const extras = Object.entries(qty).flatMap(([id, have]) => {
+    const x = counts[id]; if (!x || x.target <= have) return [];
+    return Array.from({length: x.target - have}, () => ({id: +id, confidence: x.confidence}));
+  }).sort((a, b) => b.confidence - a.confidence);
+  const out = items.slice(); let cost = out.reduce((sum, id) => sum + (ITM[id] ? ITM[id][2] || 0 : 0), 0);
+  for (const x of extras) {
+    const price = ITM[x.id] ? ITM[x.id][2] || 0 : 0;
+    if (cost + price <= 600) { out.push(x.id); cost += price; }
+  }
+  return out;
+}
+function kitView(S2, est) {
+  const mg = {};
+  S2.kits.forEach(c => {
+    const ob = {}; c.ord.forEach(i => ob[i] = (ob[i] || 0) + 1);
+    const base = est && !c.ch ? estKit(c.ord, S2.ds) : c.ord;
+    const ord = !S2.iv && !c.ch ? addAggregateCopies(base, S2.sq) : base;
+    const key = c.ch ? c.ord.map((q, i) => q + ':' + c.ch[i]).sort().join(',') : ord.slice().sort((a, b) => a - b).join(','), x = mg[key] || (mg[key] = {ord, ch: c.ch, ob, m: 0, w: 0, cost: ord.reduce((s, i) => s + (ITM[i] ? ITM[i][2] || 0 : 0), 0)});
+    x.m += c.m; x.w += c.w;
+  });
+  return Object.values(mg).sort((a, b) => b.m - a.m).slice(0, 3);
+}
+async function invSchema() {
+  const ck = 'drafter:stratz-invschema:v1';
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < BUILD_TTL) return c; } catch (_) {}
+  const un = t => { while (t && !t.name) t = t.ofType; return t ? t.name : ''; };
+  const fld = async n => (((await gq(`{ __type(name: "${n}") { fields { name type { name ofType { name ofType { name ofType { name } } } } } } }`)).__type) || {}).fields || [];
+  const o = {t: Date.now(), sel: null, inv: '', stats: '', rf: '', note: ''};
+  try {
+    const root = (await gq('{ __schema { queryType { name } } }')).__schema.queryType.name;
+    const mt = un((await fld(root)).find(f => f.name === 'match').type), pt = un((await fld(mt)).find(f => f.name === 'players').type), st = un((await fld(pt)).find(f => f.name === 'stats').type), sf = await fld(st);
+    o.stats = sf.map(f => f.name).filter(n => /inventor|item|start|purchase|buy/i.test(n)).join(', ');
+    const inv = sf.find(f => /inventory/i.test(f.name));
+    if (inv) {
+      const rf = await fld(un(inv.type)), parts = ['time'];
+      o.inv = inv.name; o.rf = rf.map(f => f.name).join(',').slice(0, 160);
+      for (let k = 0; k < 6; k++) {
+        const f = rf.find(q => q.name === 'item' + k);
+        if (f) { const sub = (await fld(un(f.type))).map(q => q.name); parts.push('item' + k + ' { ' + (sub.includes('itemId') ? 'itemId ' : sub.includes('id') ? 'id ' : '') + (sub.includes('charges') ? 'charges ' : '') + '}'); }
+        else if (rf.some(q => q.name === 'item' + k + 'Id')) { parts.push('item' + k + 'Id'); if (rf.some(q => q.name === 'item' + k + 'Charges')) parts.push('item' + k + 'Charges'); }
+      }
+      if (rf.some(f => f.name === 'time') && parts.length > 1) o.sel = 'stats { ' + inv.name + ' { ' + parts.join(' ') + ' } }';
+    }
+  } catch (e) { o.note = String(e.message).slice(0, 100); }
+  try { localStorage.setItem(ck, JSON.stringify(o)); } catch (_) {}
+  return o;
+}
+async function loadKits(id) {
+  const bp = activeBuildPos(id), k = kitKey(id); if (SKL[k]) return; SKL[k] = 1;
+  const ck = 'drafter:stratz-kits:v16:' + k;
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < KIT_TTL) { SK2[k] = c; renderBuild(); return; } } catch (e) {}
+  try {
+    await loadItems();
+    const SQ = {}, sqRows = [];
+    try {
+      const d = await gq(`{ heroStats { itemStartingPurchase(heroId: ${id}${BRK === 'all' ? '' : ', bracketBasicIds: [' + BRK + ']'}, positionIds: [POSITION_${bp}]) { itemId instance matchCount } } }`);
+      sqRows.push(...(d.heroStats.itemStartingPurchase || []));
+    } catch (e) {}
+    // STRATZ instance может начинаться с 0. Раньше `instance || 1` склеивал
+    // первую и вторую копии, из-за чего Branch/Gauntlets теряли дубликаты.
+    const minInstance = {};
+    for (const x of sqRows) {
+      const id0 = String(x.itemId), n0 = Number(x.instance);
+      if (!Number.isFinite(n0)) continue;
+      minInstance[id0] = minInstance[id0] == null ? n0 : Math.min(minInstance[id0], n0);
+    }
+    for (const x of sqRows) {
+      const id0 = String(x.itemId), n0 = Number(x.instance);
+      if (!Number.isFinite(n0)) continue;
+      const q = n0 - (minInstance[id0] === 0 ? -1 : 0);
+      const w = SQ[id0] || (SQ[id0] = {});
+      w[q] = (w[q] || 0) + (+x.matchCount || 0);
+    }
+    // Обрабатываем накопительные счётчики отдельно для каждого предмета:
+    // число матчей со второй копией вычитается из числа матчей с первой.
+    const sqModes = {};
+    for (const id0 in SQ) {
+      const w = SQ[id0], ks = Object.keys(w).map(Number).sort((a, b) => a - b);
+      const cumulative = ks.length > 1 && ks.every((q, j) => j === 0 || w[ks[j - 1]] >= w[q]);
+      sqModes[id0] = cumulative ? 'cum' : 'exact';
+      if (cumulative) {
+        const ex = {};
+        ks.forEach((q, j) => { ex[q] = Math.max(0, w[q] - (w[ks[j + 1]] || 0)); });
+        SQ[id0] = ex;
+      }
+    }
+    const mono = Object.values(sqModes).every(x => x === 'cum');
+    const dq = 'STRATZ ' + Object.entries(SQ).filter(([i]) => ITM[i]).sort((a, b) => Object.values(b[1]).reduce((s, x) => s + x, 0) - Object.values(a[1]).reduce((s, x) => s + x, 0)).slice(0, 8).map(([i, w]) => {
+      const vals = Object.entries(w).map(([q, m]) => q + 'x:' + m).join('/');
+      return ITM[i][0] + ' ' + vals;
+    }).join('; ');
+    const gm = []; let skip = 0;
+    while (gm.length < 400 && skip < 1000) {
+      const r = await gqr(`{ heroStats { guide(heroId: ${id}, positionId: POSITION_${bp}) { heroId guides(take: 100, skip: ${skip}) { matchId steamAccountId } } } }`);
+      const rows = r.heroStats.guide || [], row = rows.find(x => x.heroId == id) || rows[0], gl = row ? row.guides || [] : [];
+      gm.push(...gl); if (gl.length < 100) break; skip += 100; await sleep(300);
+    }
+    let cand = [], src = 'guides';
+    try {
+      const accs = [...new Set(gm.map(x => x.steamAccountId))].slice(0, 90), per = {}, V = [`, take: 15, skip: 0, isParsed: true, positionIds: [POSITION_${bp}]`, `, take: 15, skip: 0, isParsed: true`, `, take: 15, skip: 0`];
+      let vi = 0;
+      for (let a = 0; a < accs.length; a += 6) {
+        const part = accs.slice(a, a + 6); let r;
+        for (;;) { try { r = await gqr(`{ ${part.map((s, j) => `p${j}: player(steamAccountId: ${s}) { matches(request: {heroIds: [${id}]${V[vi]}}) { id } }`).join(' ')} }`); break; } catch (e) { if (vi < V.length - 1 && a === 0) vi++; else throw e; } }
+        part.forEach((s, j) => { per[s] = ((r['p' + j] || {}).matches || []).map(m => ({matchId: m.id, steamAccountId: s})); });
+        await sleep(250);
+      }
+      for (let k2 = 0; k2 < 15; k2++) for (const s of accs) if (per[s] && per[s][k2]) cand.push(per[s][k2]);
+      if (cand.length >= 30) src = 'players';
+    } catch (e) { cand = []; }
+    if (src === 'guides') cand = gm;
+    cand = cand.slice(0, KIT_N);
+    let AV = null;
+    const AVS = [['abilities { abilityId time }', p => p.abilities], ['playbackData { abilityLearnEvents { abilityId time } }', p => p.playbackData && p.playbackData.abilityLearnEvents], ['abilities { abilityId level }', p => p.abilities]];
+    for (const g of cand.slice(0, 4)) { if (AV) break; for (const v of AVS) { try { const r = await gq(`{ m: match(id: ${g.matchId}) { players(steamAccountId: ${g.steamAccountId}) { ${v[0]} } } }`), pl = ((r.m || {}).players || [])[0]; if (pl && (v[1](pl) || []).length) { AV = v; break; } } catch (e) {} } }
+    const ISC = await invSchema();
+    let IV = null;
+    const IVS = (ISC.sel ? [[ISC.sel, 1, ISC.inv]] : []).concat([
+      ['stats { inventoryReport { time item0 { itemId charges } item1 { itemId charges } item2 { itemId charges } item3 { itemId charges } item4 { itemId charges } item5 { itemId charges } } }', 1, 'inventoryReport'],
+      ['stats { inventoryReport { time item0 { itemId } item1 { itemId } item2 { itemId } item3 { itemId } item4 { itemId } item5 { itemId } } }', 1, 'inventoryReport'],
+      ['stats { inventoryReport { time item0Id item1Id item2Id item3Id item4Id item5Id } }', 2, 'inventoryReport']]);
+    for (const g of cand.slice(0, 4)) { if (IV) break; for (const v of IVS) { try { const r = await gq(`{ m: match(id: ${g.matchId}) { players(steamAccountId: ${g.steamAccountId}) { ${v[0]} } } }`), pl = ((r.m || {}).players || [])[0]; if (pl && pl.stats && (pl.stats[v[2]] || []).length) { IV = v; break; } } catch (e) {} } }
+    const ds = {};
+    const skl = [];
+    const kits = {}, recs = []; let partial = false, stN = 0, dupN = 0, n = 0, i = 0, bs = 5, lp = -1;
+    while (i < cand.length) {
+      const part = cand.slice(i, i + bs);
+      const q = part.map((g, j) => `m${j}: match(id: ${g.matchId}) { didRadiantWin durationSeconds allPlayers: players { heroId isRadiant position } players(steamAccountId: ${g.steamAccountId}) { heroId isRadiant position item0Id item1Id item2Id item3Id item4Id item5Id stats { itemPurchases { time itemId } } ${AV ? AV[0] : ''} ${IV ? IV[0] : ''} } }`).join(' ');
+      let r; try { r = await gqr(`{ ${q} }`); } catch (e) { if (/complex/i.test(e.message) && bs > 1) { bs >>= 1; continue; } throw e; }
+      for (let j = 0; j < part.length; j++) {
+        const m = r['m' + j], me = m && (m.players || []).find(x => x.heroId == id); if (!me) continue;
+        const mp = posNum(me); if (mp && mp !== bp) continue;
+        const evs = ((me.stats && me.stats.itemPurchases) || []).filter(x => ITM[x.itemId]).sort((a, b) => a.time - b.time);
+        if (!evs.length) continue;
+        recs.push({w: m.didRadiantWin === me.isRadiant ? 1 : 0, d: Math.round((m.durationSeconds || 0) / 60), vs: (m.allPlayers || []).filter(x => x.isRadiant !== me.isRadiant).map(x => x.heroId), vp: (m.allPlayers || []).filter(x => x.isRadiant !== me.isRadiant).map(x => [x.heroId, posNum(x)]), f: [me.item0Id, me.item1Id, me.item2Id, me.item3Id, me.item4Id, me.item5Id].filter(Boolean), e: evs.filter(x => ITM[x.itemId][2] >= 400 || /aghanim's shard/i.test(ITM[x.itemId][0])).map(x => [x.itemId, Math.round(Math.max(0, x.time) / 6) / 10])});
+        if (AV) { const ev = (AV[1](me) || []).slice().sort((a, b) => (a.time ?? a.level ?? 0) - (b.time ?? b.level ?? 0)); if (ev.length >= 8) skl.push({w: m.didRadiantWin === me.isRadiant ? 1 : 0, s: ev.slice(0, 10).map(x => x.abilityId)}); }
+        let snap = null;
+        if (IV) { const bt = ((me.stats && me.stats[IV[2]]) || []).filter(e => typeof e.time === 'number').sort((a, b) => Math.abs(a.time) - Math.abs(b.time))[0]; if (bt && Math.abs(bt.time) <= 30) snap = [0, 1, 2, 3, 4, 5].map(k => { const o = bt['item' + k], r = o && typeof o === 'object' ? [o.itemId ?? o.id, o.charges || 0] : (bt['item' + k + 'Id'] ? [bt['item' + k + 'Id'], bt['item' + k + 'Charges'] || 0] : null); return r && r[0] && ITM[r[0]] && !/^town portal scroll$/i.test(ITM[r[0]][0]) ? r : null; }).filter(Boolean); }
+        const us = !!(snap && snap.length >= 2), seq = us ? snap.map(x => x[0]) : evs.filter(x => x.time <= 0 && !/^town portal scroll$/i.test(ITM[x.itemId][0])).map(x => x.itemId), chs = us ? snap.map(x => x[1]) : null, items = seq.slice().sort((a, b) => a - b);
+        if (seq.length) { stN++; if (!us && new Set(seq).size < seq.length) dupN++; }
+        if (!us) { const cn = {}; seq.forEach(i => cn[i] = (cn[i] || 0) + 1); Object.keys(cn).forEach(i => { const d = ds[i] || (ds[i] = {h: {}}); d.h[cn[i]] = (d.h[cn[i]] || 0) + 1; }); }
+        if (!items.length) continue;
+        const cost = items.reduce((s, x) => s + (ITM[x][2] || 0), 0); if (!us && cost > 600) continue;
+        const key = us ? snap.map(x => x[0] + ':' + x[1]).sort().join(',') : items.join(','), a = kits[key] || (kits[key] = {items, ord: seq, ch: chs, m: 0, w: 0, cost});
+        a.m++; a.w += m.didRadiantWin === me.isRadiant ? 1 : 0; n++;
+      }
+      i += part.length; await sleep(300);
+      const pr = Math.floor(10 * i / cand.length); if (pr !== lp) { lp = pr; KP[k] = pr * 10; renderBuild(); }
+    }
+    if (!n) throw new Error('нет стартовых закупов в матчах топ-игроков на позиции ' + bp);
+    let sb = null, sbMsg = AV ? 'в выборке мало матчей с данными о прокачке' : 'STRATZ не отдал прокачку способностей (проверил 3 варианта запроса)';
+    if (AV && skl.length >= 10) {
+      const g = {}; skl.forEach(x => { const key = x.s.join(','), a = g[key] || (g[key] = {s: x.s, m: 0, w: 0}); a.m++; a.w += x.w; });
+      const all = Object.values(g).sort((a, b) => b.m - a.m), pop = all[0], minM = Math.max(10, Math.round(skl.length * 0.05)), best = all.filter(x => x.m >= minM).sort((a, b) => b.w / b.m - a.w / a.m || b.m - a.m)[0];
+      sb = {n: skl.length, pop, best: best && best !== pop ? best : null, meta: {}};
+      const ids = [...new Set([...pop.s, ...(sb.best ? sb.best.s : [])])];
+      try {
+        const [aid, abs] = await Promise.all(['ability_ids', 'abilities'].map(c => fetch('https://api.opendota.com/api/constants/' + c).then(r => r.json())));
+        ids.forEach(i => { const nm = aid[i] || '', a = abs[nm]; sb.meta[i] = /^special_bonus/.test(nm) ? ['Талант', ''] : [a && a.dname || nm || '#' + i, a && a.img || '']; });
+      } catch (e) {}
+    }
+    const o = {t: Date.now() - (partial ? KIT_TTL - 36e5 : 0), n, src, sb, sbMsg, ds, sq: SQ, iv: !!IV, dup: [dupN, stN], dq: 'снимок инвентаря на старте: ' + (IV ? 'есть (вариант ' + (IVS.indexOf(IV) + 1) + ')' : 'нет') + (ISC.stats ? '; поля STRATZ: ' + ISC.stats : '') + (ISC.rf ? '; отчёт: ' + ISC.rf : '') + (ISC.note ? '; схема: ' + ISC.note : '') + '; повторные покупки в логе: ' + dupN + ' из ' + stN + ' матчей; агрегаты STRATZ: ' + dq, ms: recs, kits: Object.values(kits).sort((a, b) => b.m - a.m).slice(0, 14).map(c => ({ord: c.ord, ch: c.ch || null, m: c.m, w: c.w}))};
+    SK2[k] = o; lsPut(ck, JSON.stringify(o));
+  } catch (e) { SK2[k] = {err: e.message}; }
+  renderBuild();
+}
+function kitsHTML(id) {
+  const k = kitKey(id); if (!SK2[k] && !SKL[k]) loadKits(id);
+  const S2 = SK2[k];
+  if (!S2) return `<div class="mute">Собираю стартовые закупы из матчей топ-игроков… ${KP[k] ? KP[k] + '%' : ''}</div>`;
+  if (S2.err) return `<div class="mute">Не собрал закупы: ${escapeHTML(S2.err)}</div>`;
+  const lb = ['MOST POPULAR', 'ALT 1', 'ALT 2'], est = KMODE === 'est' && !S2.iv, view = kitView(S2, est), pd = S2.dup && S2.dup[1] ? Math.round(100 * S2.dup[0] / S2.dup[1]) : 0;
+  const ctl = `<div class="bctl"><label>Копии в закупе <select data-bsel="kit"><option value="log"${KMODE === 'log' ? ' selected' : ''}>лог + частоты копий STRATZ</option><option value="est"${KMODE === 'est' ? ' selected' : ''}>оценка по золоту</option></select></label></div>`;
+  return (S2.iv ? '' : ctl) + view.map((c, i) => { const seen = {}; return `<div class="kit"><span class="kl">${lb[i]}</span>${c.ord.map((x, ix) => { seen[x] = (seen[x] || 0) + 1; return itemHTML(x, c.ch && c.ch[ix] && /Tango|Ward|Mango|Clarity|Dust|Smoke|Salve/.test(ITM[x][0]) ? '×' + c.ch[ix] : '', !S2.iv && seen[x] > (c.ob[x] || 0) ? 'est' : ''); }).join('')}<span class="ks">${c.m} · ${pc(c.m / S2.n)}${S2.src === 'players' ? ' · WR ' + pc(c.w / c.m) : ''} · ${c.cost}з</span></div>`; }).join('')
+    + `<div class="mute">Выборка: ${S2.n} матчей топ-игроков ${S2.src === 'players' ? '(победы и поражения)' : '(STRATZ Guides, только победные, поэтому без честного WR)'}. Справа: матчей, доля выборки${S2.src === 'players' ? ', WR' : ''}, стоимость. ${S2.iv ? 'Киты взяты из снимка инвентаря на старте: копии и заряды точные.' : 'Лог покупок дополняется агрегированной статистикой STRATZ по количеству копий предметов для героя и позиции. Это восстанавливает часто пропущенные повторы, но не доказывает, что каждая копия была именно в этой комбинации закупа.'}</div><div class="mute" style="font-size:11px">диагностика закупа: ${escapeHTML(S2.dq || 'нет данных')}</div>`;
+}
+function abilHTML(S2) {
+  const h = '<h3>Прокачка способностей <span class="mute">первые 10 уровней</span></h3>';
+  if (!S2 || S2.err) return '';
+  if (!S2.sb) return h + `<div class="mute">${escapeHTML(S2.sbMsg || 'нет данных')}.</div>`;
+  const row = (lb, x) => `<div class="mute">${lb} · ${x.m} матчей · ${pc(x.m / S2.sb.n)} · WR ${pc(x.w / x.m)}</div><div class="items">${x.s.map((id, i) => { const a = S2.sb.meta && S2.sb.meta[id], n = escapeHTML(a ? a[0] : '#' + id); return `<div class="it" title="${n}">${a && a[1] ? `<img loading="lazy" src="https://cdn.cloudflare.steamstatic.com${a[1]}" alt="" onerror="this.style.visibility='hidden'">` : ''}<span>${n}</span><b>${i + 1}</b></div>`; }).join('')}</div>`;
+  return h + row('Most Popular', S2.sb.pop) + (S2.sb.best ? row('Highest Win Rate', S2.sb.best) : '');
+}
+const SITU = new Set(['Nullifier', "Linken's Sphere", 'Spirit Vessel', 'Monkey King Bar', 'Orchid Malevolence', 'Bloodthorn', 'Ghost Scepter', 'Hood of Defiance', 'Aeon Disk', 'Pipe of Insight', 'Crimson Guard', "Heaven's Halberd", 'Lotus Orb', 'Dust of Appearance', 'Gem of True Sight']);
+const isShardItem = id => /aghanim.?s shard/i.test((ITM[id] && ITM[id][0]) || '');
+function samplePlan(S) {
+  const N = S.ms.length, it = {};
+  for (const m of S.ms) { const seen = {}; for (const [id, t] of m.e) { const o = it[id] || (it[id] = {id, c: [0, 0], ts: [0, 0]}), k = seen[id] = (seen[id] || 0) + 1; if (k <= 2) { o.c[k - 1]++; o.ts[k - 1] += t; } } }
+  let list = Object.values(it).filter(x => ITM[x.id] && sigOK(x.id) && !CONSUMABLE.test(ITM[x.id][0]) && ITM[x.id][0] !== 'Boots of Speed' && !/^recipe/.test(ITM[x.id][3] || ''))
+    .map(x => ({id: x.id, p: x.c[0] / N, t: x.ts[0] / x.c[0], d2: x.c[1] / N, t2: x.c[1] ? x.ts[1] / x.c[1] : null}));
+  list = list.filter(a => isShardItem(a.id) || (!(((ITC[a.id] || []).length === 0 && ITM[a.id][0] !== 'Blink Dagger') || ITM[a.id][2] < 1000) || !list.some(b => b !== a && (ITC[b.id] || []).includes(a.id) && b.p >= 0.8 * a.p)));
+  const FT = S.ms.map(m => { const o = {}; m.e.forEach(([id, t]) => { if (!(id in o)) o[id] = t; }); return o; });
+  const imm = (a, b) => { const g = FT.filter(o => a.id in o && b.id in o).map(o => o[b.id] - o[a.id]).sort((x, y) => x - y); return g.length >= 5 && g[g.length >> 1] < 1.5; };
+  list = list.filter(a => !list.some(b => b !== a && (ITC[b.id] || []).includes(a.id) && imm(a, b)));
+  const sets = S.ms.map(m => new Set(m.e.map(x => x[0]))), BT = /^(Power Treads|Phase Boots|Arcane Boots|Tranquil Boots|Boots of Bearing)$/, WB = /^(Bracer|Wraith Band|Null Talisman)$/, kept = [];
+  for (const x of list.filter(x => (isShardItem(x.id) ? x.p >= 0.15 : x.p >= (ITM[x.id][2] >= 2000 || WB.test(ITM[x.id][0]) ? 0.2 : 0.25)) && !(SITU.has(ITM[x.id][0]) && x.p < 0.5)).sort((a, b) => b.p - a.p)) {
+    const bt = BT.test(ITM[x.id][0]);
+    if (kept.some(k => (bt && BT.test(ITM[k.id][0])) || (!(WB.test(ITM[x.id][0]) && WB.test(ITM[k.id][0])) && sets.filter(s => s.has(x.id) && s.has(k.id)).length <= 0.2 * x.p * N))) continue;
+    kept.push(x);
+  }
+  const shard = kept.find(x => isShardItem(x.id));
+  const core = [...kept.filter(x => !isShardItem(x.id)).slice(0, 12), ...(shard ? [shard] : [])], near = list.filter(x => !core.includes(x) && x.p >= 0.1 && !(SITU.has(ITM[x.id][0]) && x.p < 0.5)).sort((a, b) => b.p - a.p).slice(0, 6);
+  const need = Math.ceil(0.6 * core.length), ref = S.ms.filter(m => { const s = new Set(m.e.map(x => x[0])); return core.filter(c => s.has(c.id)).length >= need; });
+  if (ref.length >= 25) for (const c of core) {
+    const a = [], b = [];
+    ref.forEach(m => { const es = m.e.filter(x => x[0] === c.id); if (es[0]) a.push(es[0][1]); if (es[1]) b.push(es[1][1]); });
+    if (a.length >= 5) c.t = a.reduce((s, x) => s + x, 0) / a.length;
+    if (b.length >= 3) c.t2 = b.reduce((s, x) => s + x, 0) / b.length;
+  }
+  for (const x of core.slice()) if (x.d2 >= 0.12) core.push({...x, t: x.t2, p: x.d2});
+  core.sort((a, b) => a.t - b.t);
+  const pm = Object.fromEntries(list.map(x => [x.id, x.p])), tm = Object.fromEntries(list.map(x => [x.id, x.t]));
+  const inv = [['20–35 мин', 20, 35], ['35–55 мин', 35, 55], ['55+ мин', 55, 999]].map(([lb, a, b]) => {
+    const ms = S.ms.filter(m => m.d >= a && m.d < b), c = {};
+    ms.forEach(m => m.f.forEach(id => { if (ITM[id] && !CONSUMABLE.test(ITM[id][0]) && !(SITU.has(ITM[id][0]) && (pm[id] || 0) < 0.5) && !/^recipe/.test(ITM[id][3] || '')) c[id] = (c[id] || 0) + 1; }));
+    const ids = Object.keys(c).map(Number).sort((a, b) => ITM[a][2] - ITM[b][2]);
+    for (const a of ids) for (const b of ids) if (a !== b && c[a] && c[b] && (ITC[b] || []).includes(a)) { if (c[a] > c[b]) { c[a] += c[b]; delete c[b]; } else { c[b] += c[a]; delete c[a]; } }
+    const BG = /^(Power Treads|Phase Boots|Arcane Boots|Tranquil Boots|Boots of Bearing|Boots of Travel|Guardian Greaves)$/;
+    Object.keys(c).filter(i => BG.test(ITM[i][0])).sort((x, y) => c[y] - c[x]).slice(1).forEach(i => delete c[i]);
+    return [lb, ms.length, Object.entries(c).map(([id, n]) => ({id: +id, s: Math.min(1, n / ms.length), t: tm[id]})).sort((p, q) => q.s - p.s).slice(0, 6)];
+  });
+  return {core, near, inv, N, ms: S.ms || [], pool: Object.fromEntries(list.filter(x => x.p >= 0.03).map(x => [ITM[x.id][0], x]))};
+}
+const EB = {}, EBL = {};
+const ebKey = (e, p) => BRK + ':' + e + ':' + (p || 0);
+async function loadEB(list) {
+  for (const e of list) {
+    const k = ebKey(e.id, e.p); if (EB[k] || EBL[k]) continue; EBL[k] = 1;
+    const ck = 'drafter:stratz-eb:v1:' + k;
+    try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < BUILD_TTL) { EB[k] = c; continue; } } catch (_) {}
+    const br = BRK === 'all' ? '' : `, bracketBasicIds: [${BRK}]`, ps = e.p ? `, positionIds: [POSITION_${e.p}]` : '';
+    try {
+      const q = async (name, f) => (await gq(`{ heroStats { ${name}(heroId: ${e.id}${br}${ps}) { ${f} } } }`)).heroStats[name] || [];
+      const full = agg(await q('itemFullPurchase', 'itemId instance matchCount winCount time')), bo = agg(await q('itemBootPurchase', 'itemId instance matchCount winCount timeAverage'));
+      const T = bo.filter(x => ITM[x.id] && ITM[x.id][0] !== 'Boots of Speed').reduce((s, x) => s + x.m, 0) || Math.max(1, ...full.map(x => x.m));
+      EB[k] = {t: Date.now(), it: full.concat(bo).map(x => ({id: x.id, p: Math.min(1, x.m / T)})).filter(x => x.p >= 0.15)};
+      try { localStorage.setItem(ck, JSON.stringify(EB[k])); } catch (_) {}
+    } catch (er) { EB[k] = {err: String(er.message).slice(0, 120), it: []}; }
+    await sleep(150);
+  }
+  renderBuild();
+}
+function matchupItemHTML(SP, enemies) {
+  const ms = SP && SP.ms || [];
+  if (!ms.some(m => Array.isArray(m.vs))) return '<h3>Предметы и винрейт против пика</h3><div class="mute">Для этой выборки пока нет данных о составах противников. Обнови билд, чтобы собрать их.</div>';
+  const rows = [];
+  for (const enemy of enemies) {
+    const games = ms.filter(m => Array.isArray(m.vs) && m.vs.includes(enemy.id));
+    if (games.length < 20) continue;
+    const tally = new Map();
+    for (const m of games) {
+      const bought = new Set((m.e || []).map(x => x[0]));
+      for (const id of bought) {
+        if (!ITM[id] || CONSUMABLE.test(ITM[id][0])) continue;
+        const a = tally.get(id) || {yes:0, yesW:0, no:0, noW:0};
+        a.yes++; a.yesW += m.w ? 1 : 0; tally.set(id, a);
+      }
+    }
+    for (const [id, a] of tally) {
+      a.no = games.length - a.yes; a.noW = games.filter(m => !(m.e || []).some(x => x[0] === id) && m.w).length;
+      if (a.yes < 8 || a.no < 8) continue;
+      const y = a.yesW / a.yes, n = a.noW / a.no;
+      rows.push({id, enemy: nm(enemy.id), games: a.yes, total: games.length, delta: (y-n)*100, yes:y, no:n});
+    }
+  }
+  if (!rows.length) return '<h3>Предметы и винрейт против пика</h3><div class="mute">Пока недостаточно матчей на конкретных противников (нужно не менее 20 матчей на соперника и 8 покупок/непокупок предмета). По мере накопления выборки здесь появится сравнение.</div>';
+  rows.sort((a,b) => b.delta-a.delta);
+  const best = rows.slice(0,8);
+  return '<h3>Предметы и винрейт против пика</h3><div class="mute">Сравнение матчей этого героя на выбранной позиции против конкретного врага: винрейт с предметом и без него. Это корреляция, не доказательство, что предмет сам повышает винрейт. Минимум 8 матчей в каждой группе.</div>' + best.map(x => `<div class="mute" style="display:flex;justify-content:space-between;gap:8px;margin:5px 0"><span><b>${escapeHTML(ITM[x.id][0])}</b> vs ${escapeHTML(x.enemy)} · ${x.games}/${x.total} матчей</span><span style="white-space:nowrap">${Math.round(x.yes*100)}% / ${Math.round(x.no*100)}% <b>${x.delta>=0?'+':''}${x.delta.toFixed(1)} п.п.</b></span></div>`).join('');
+}
+const MATCHUP_POSITION_CACHE = new WeakMap();
+function matchupPositionItemHTML(SP) {
+  const ms = SP && SP.ms || [];
+  if (!ms.some(m => Array.isArray(m.vp))) return '<h3>Винрейт предметов по позициям противника</h3><div class="mute">Нет данных о позициях противников в собранных матчах. Обнови выборку.</div>';
+  const cached = MATCHUP_POSITION_CACHE.get(ms);
+  if (cached) return cached;
+  const groups = [
+    {key:'carry', label:'Против керри · 1-я позиция', test:p=>p===1},
+    {key:'mid', label:'Против мидера · 2-я позиция', test:p=>p===2},
+    {key:'off', label:'Против оффлейнера · 3-я позиция', test:p=>p===3},
+    {key:'support', label:'Против саппортов · 4–5-я позиции', test:p=>p===4||p===5}
+  ];
+  const sections = groups.map(g => {
+    const games = ms.filter(m => Array.isArray(m.vp) && m.vp.some(x => g.test(Number(x[1]))));
+    if (!games.length) return `<div class="mute"><b>${g.label}</b> · нет данных</div>`;
+    const tally = new Map(); let totalWins = 0;
+    for (const m of games) {
+      if (m.w) totalWins++;
+      const bought = new Set((m.e || []).map(x => Number(x[0])));
+      for (const id of bought) {
+        if (!ITM[id] || CONSUMABLE.test(ITM[id][0])) continue;
+        const a = tally.get(id) || {yes:0, yesW:0};
+        a.yes++; if (m.w) a.yesW++;
+        tally.set(id, a);
+      }
+    }
+    const rows = [];
+    for (const [id, a] of tally) {
+      const no = games.length - a.yes;
+      if (a.yes < 8 || no < 8) continue;
+      const noW = totalWins - a.yesW;
+      const yesWR = a.yesW/a.yes, noWR = noW/no;
+      rows.push({id, yes:a.yes, no, yesWR, noWR, delta:(yesWR-noWR)*100});
+    }
+    rows.sort((a,b)=>b.delta-a.delta);
+    if (!rows.length) return `<div class="mute"><b>${g.label}</b> · ${games.length} матчей; пока недостаточно данных по предметам (минимум 8 матчей с покупкой и 8 без).</div>`;
+    return `<div style="margin:8px 0"><b>${g.label}</b><div class="mute">${games.length} матчей против этой позиции · винрейт с предметом / без предмета</div>` + rows.slice(0,4).map(x=>`<div class="mute" style="display:flex;justify-content:space-between;gap:8px;margin:5px 0"><span><b>${escapeHTML(ITM[x.id][0])}</b> · ${x.yes}/${games.length}</span><span style="white-space:nowrap">${Math.round(x.yesWR*100)}% / ${Math.round(x.noWR*100)}% <b>${x.delta>=0?'+':''}${x.delta.toFixed(1)} п.п.</b></span></div>`).join('') + '</div>';
+  });
+  const html = '<h3>Винрейт предметов по позициям противника</h3><div class="mute">Для каждой позиции матч считается один раз, если во вражеской команде есть хотя бы один герой этой роли. Сравнение показывает корреляцию, а не причинное влияние предмета. Минимум 8 матчей в каждой группе.</div>' + sections.join('');
+  MATCHUP_POSITION_CACHE.set(ms, html);
+  return html;
+}
+function mostCommonPurchaseTiming(SP, id) {
+  const bins = new Map();
+  for (const m of (SP && SP.ms) || []) {
+    // STRATZ may return itemId as a number in one response and a string in another.
+    const hit = (m.e || []).find(x => String(x[0]) === String(id) && x[1] != null && Number.isFinite(Number(x[1])));
+    if (!hit) continue;
+    const minute = Math.max(0, Number(hit[1]));
+    const start = Math.floor(minute / 5) * 5;
+    bins.set(start, (bins.get(start) || 0) + 1);
+  }
+  let best = null, count = 0;
+  for (const [start, n] of bins) if (n > count) { best = start; count = n; }
+  if (best != null) return `чаще всего ${best}–${best + 4} мин · ${pc(count / binsCount(SP, id))} покупок`;
+
+  // Fallback to STRATZ aggregate purchase time when per-match events have no usable timestamps.
+  const aggregate = Object.values((SP && SP.pool) || {}).find(x => String(x.id) === String(id));
+  if (aggregate && Number.isFinite(Number(aggregate.t))) {
+    const minute = Math.max(0, Number(aggregate.t));
+    const start = Math.floor(minute / 5) * 5;
+    return `около ${start}–${start + 4} мин · среднее STRATZ`;
+  }
+  return 'недостаточно данных о времени';
+}
+function binsCount(SP, id) {
+  return ((SP && SP.ms) || []).reduce((n, m) => n + ((m.e || []).some(x => String(x[0]) === String(id)) ? 1 : 0), 0);
+}
+function sitHTML(SP) {
+  const PE = guessTeam('enemy'), PA = guessTeam('ally'), hd = '<h3>Ситуативка под драфт</h3>';
+  const E = S.enemy.map((e, i) => e == null ? null : {id: e, p: PE[i].p}).filter(Boolean), A = S.ally.map((a, i) => a == null || i === S.me ? null : {id: a, p: PA[i].p}).filter(Boolean);
+  if (!E.length) return hd + '<div class="mute">Добавь героев во вражеский драфт.</div>';
+  if (!SP) return hd + '<div class="mute">Появится после загрузки выборки матчей.</div>';
+  loadEB(E);
+  const T = threats(E, A), X = {}; let got = 0;
+  E.forEach(e => { const b = EB[ebKey(e.id, e.p)]; if (b && !b.err) { got++; b.it.forEach(z => { const n = ITM[z.id] && ITM[z.id][0]; if (n && z.p >= 0.25) (X[n] = X[n] || []).push(nm(e.id)); }); } });
+  const fired = RULES.map(([name, fn]) => { const r = fn(T, X); return r && {name, score: r[0], why: r[1]}; }).filter(x => x && x.score >= 3).sort((a, b) => b.score - a.score).slice(0, 8);
+  const rec = fired.filter(x => SP.pool[x.name]), idea = fired.filter(x => !SP.pool[x.name]), errs = E.map(e => (EB[ebKey(e.id, e.p)] || {}).err).filter(Boolean);
+  return `${hd}<div class="mute">Врагов: ${E.length}/5 · билды врагов загружены: ${got}/${E.length}${errs.length ? ' · ошибка: ' + escapeHTML(errs[0]) : ''}${E.length < 5 ? ' · драфт неполный, список изменится' : ''}</div>`
+    + (rec.length ? `<div class="items">${rec.map(x => { const it = SP.pool[x.name]; return itemHTML(it.id, `${mostCommonPurchaseTiming(SP, it.id)}<br>${pc(it.p)} матчей`, ''); }).join('')}</div><ul class="rsn">${rec.map(x => `<li><b>${escapeHTML(x.name)}</b>: ${escapeHTML(x.why)}</li>`).join('')}</ul>` : '<div class="mute">Из предметов, которые герой обычно покупает, под этот драфт ничего особого не нашлось.</div>')
+    + matchupItemHTML(SP, E)
+    + matchupPositionItemHTML(SP)
+    + (idea.length ? `<div class="mute">Идеи вне билда героя (эвристика): ${idea.map(x => `<b>${escapeHTML(x.name)}</b>: ${escapeHTML(x.why)}`).join('; ')}</div>` : '');
+}
+function neutralHTML(list) {
+  const by = {}; for (const x of list || []) { const t = ITM[x.id] && ITM[x.id][5]; if (t) (by[t] = by[t] || []).push(x); }
+  const ts = Object.keys(by).sort(); if (!ts.length) return '';
+  return '<h3>Нейтралки <span class="mute">доля внутри тира</span></h3>' + ts.map(t => { const a = by[t], s = a.reduce((q, x) => q + x.m, 0) || 1; return `<div class="mute">Тир ${t}</div><div class="items">${a.slice(0, 5).map(x => itemHTML(x.id, pc(x.m / s), '')).join('')}</div>`; }).join('');
+}
+function planHTML(id, d) {
+  const bk = buildMemKey(id);
+  if (!B[bk] && !BL[bk]) loadBuild(id);
+  const data = B[bk];
+  const bp = activeBuildPos(id), ctl = `<div class="bctl"><label>Роль <select data-bsel="posmode"><option value="auto"${BPMODE === 'auto' ? ' selected' : ''}>Авто</option><option value="manual"${BPMODE === 'manual' ? ' selected' : ''}>Вручную</option></select></label><label>Позиция <select data-bsel="pos"${BPMODE === 'auto' ? ' disabled title="В режиме Авто позиция определяется по статистике STRATZ"' : ''}>${[1, 2, 3, 4, 5].map(p => `<option value="${p}"${p === BP ? ' selected' : ''}>${p}</option>`).join('')}</select></label><label>Ранг <select data-bsel="rank">${Object.entries(BRKS).map(([k, v]) => `<option value="${k}"${k === BRK ? ' selected' : ''}>${v}</option>`).join('')}</select></label><button data-build-refresh="${id}" style="padding:2px 8px;border-radius:6px;border:1px solid #888;color:inherit;cursor:pointer;background:transparent">Обновить</button></div>`;
+  if (!data) return {main: ctl + '<div class="mute">Загружаю статистику билдов STRATZ…</div>', side: ''};
+  if (data.err) return {main: ctl + `<div class="mute">STRATZ не отдал билд: ${escapeHTML(data.err)}. Проверь токен, лимит API или смени позицию/ранг.</div>`, side: ''};
+  if (itmState < 2) return {main: ctl + '<div class="mute">Загружаю названия и иконки предметов…</div>', side: ''};
+  const P = buildPlan(data), row = (rows, f, sep = '') => `<div class="items">${rows.map(f).join(sep) || '<span class="mute">нет данных</span>'}</div>`;
+  const S2 = SK2[kitKey(id)], SP = S2 && !S2.err && S2.ms && S2.ms.length >= 30 ? samplePlan(S2) : null;
+  const contextualCore = SP ? SP.core.slice().sort((a, b) => a.t - b.t) : [];
+  const cell = x => itemHTML(x.id, `${mn(x.t)}<br>${pc(x.p)} · ${pc(x.wr)}`, '');
+  const main = `${ctl}<div class="mute">Позиция ${bp}${BPMODE === 'auto' ? ' (авто)' : ' (вручную)'}. ${SP ? 'Билд, закупы и инвентарь по ' + SP.N + ' матчам топ-игроков' + (S2.src === 'players' ? ' (победы и поражения)' : ' (только победные)') : 'Собираю матчи топ-игроков…'}. Под иконкой: среднее время первой покупки и pick%. Контрпредметы под выбранный драфт отображаются отдельно в ситуативке.</div>
+    <h3>Стартовый закуп <span class="mute">реальные сборки до 0:00, до 600 золота, матчи топ-игроков</span></h3>${kitsHTML(id)}
+    <h3>Основной билд <span class="mute">${SP ? 'по матчам топ-игроков: ' + SP.N : 'пока агрегаты STRATZ, неполные; полный билд грузится'}</span></h3>${SP ? row(contextualCore, x => itemHTML(x.id, `${Math.round(x.t)}m<br>${pc(x.p)}`, ''), '<span class="mute">›</span>') : row(P.core, cell, '<span class="mute">›</span>')}
+    ${SP && SP.near.length ? '<div class="mute" style="font-size:11px">Чуть ниже порога: ' + SP.near.map(x => escapeHTML(ITM[x.id][0]) + ' ' + pc(x.p) + ' (' + Math.round(x.t) + 'm)').join(', ') + '</div>' : ''}
+    ${abilHTML(S2)}
+    <h3>Инвентарь в конце игры <span class="mute">по длительности матча</span></h3>${SP ? SP.inv.map(([lb, n, w]) => `<div class="mute">${lb} · ${n} матчей</div>${n >= 5 ? row(w, x => itemHTML(x.id, pc(x.s) + (x.t != null ? '<br>' + Math.round(x.t) + 'm' : ''), '')) : '<div class="mute">мало матчей в выборке</div>'}`).join('') : '<div class="mute">Строится из матчей топ-игроков, загружаю…</div>'}
+    ${sitHTML(SP)}
+    ${neutralHTML(data.neutral)}<div class="mute" style="font-size:11px">диагностика: stats ${data.dbg ? data.dbg.st : '?'} · ботинки ${P.bs} · макс. предмет ${data.dbg ? data.dbg.mx : '?'} · instance ${data.dbg ? data.dbg.inst : '?'} · ошибки ${data.dbg && data.dbg.err ? escapeHTML(data.dbg.err) : 'нет'}</div>`;
+  const side = `<h3>Как читать билд</h3><p class="mute">Основной билд: предметы, которые покупают минимум в 25% матчей (дорогие от 2000 золота: в 20%) (альтернативы вроде двух видов ботинок или напульсников не склеиваются, остаётся популярный), в порядке среднего времени первой покупки. Собранные предметы идут по этапам (например, Echo Sabre, потом Harpoon), а ингредиенты, которые покупают прямо перед сборкой, скрыты. Время считается по матчам, где куплено большинство предметов основы: так хронология реалистична, а не склеена из быстрых игр. В инвентаре в конце игры апгрейды объединены в один предмет, под иконкой доля игр и среднее время первой покупки. Ситуативка под драфт считается по способностям врагов и предметам, которые они обычно берут. Предметы-контры (Nullifier, Linken's, Spirit Vessel, MKB, Orchid, Pipe, Crimson Guard и т.п.) попадают в основу и инвентарь, только если их берёт больше половины игроков героя, иначе они только в ситуативке. Нейтралки пока выключены.</p>`;
+  return {main, side};
+}
+$('build').addEventListener('click', ev => {
+  const r = ev.target.closest('[data-build-refresh]'); if (!r) return;
+  const id = +r.dataset.buildRefresh; try { localStorage.removeItem(buildCacheKey(id)); localStorage.removeItem('drafter:stratz-kits:v16:' + kitKey(id)); } catch (_) {} delete SK2[kitKey(id)]; SKL[kitKey(id)] = 0;
+  for (const q in EB) delete EB[q]; for (const q in EBL) delete EBL[q];
+  const bk = buildMemKey(id); delete B[bk]; BL[bk] = 0; renderBuild(); loadBuild(id);
+});
+$('build').addEventListener('change', ev => {
+  const s = ev.target.closest('[data-bsel]'); if (!s) return;
+  if (s.dataset.bsel === 'posmode') { BPMODE = s.value; lsSet('buildPosMode', BPMODE); } else if (s.dataset.bsel === 'pos') { BP = +s.value; lsSet('buildPos', BP); } else if (s.dataset.bsel === 'kit') { KMODE = s.value; lsSet('kitMode', KMODE); } else { BRK = s.value; lsSet('buildBracket', BRK); }
+  renderBuild();
+});
+$('colgo').addEventListener('click', () => { for (const k in MS) MS[k].done = false; collectAll(); });
+$('colsave').addEventListener('click', () => {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({v: 1, heroes: MS})], {type: 'application/json'}));
+  a.download = 'drafter-stat.json'; a.click();
+});
+$('colload').addEventListener('click', () => $('colfile').click());
+$('colfile').addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const j = JSON.parse(await f.text()); for (const k in j.heroes) { MS[k] = j.heroes[k]; await dbSave(k); } CST.msg = 'Файл загружен.'; }
+  catch (x) { CST.msg = 'Не удалось прочитать файл: ' + x.message; }
+  renderColl(); render();
+});
+const RANKRU = {all: 'все ранги', HERALD_GUARDIAN: 'Рекрут-Страж', CRUSADER_ARCHON: 'Рыцарь-Герой', LEGEND_ANCIENT: 'Легенда-Властелин', DIVINE_IMMORTAL: 'Божество-Титан'};
+const ITM = {}, ITN = {}, B = {}, BL = {}, EN = {};
+let itmState = 0, ENL = false, ENerr = '', ENrk = null;
+const ITC = {}, ITK = {}; let ITP = null;
+function loadItems() { return ITP || (ITP = loadItemsReal()); }
+async function loadItemsReal() {
+  itmState = 1;
+  try {
+    let c = null; try { c = JSON.parse(localStorage.getItem('it19') || 'null'); } catch (e) {}
+    if (!c || Date.now() - c.t > 6048e5) {
+      const j = await (await fetch('https://api.opendota.com/api/constants/items')).json(), m = {};
+      for (const k in j) { const x = j[k]; if (x && x.id) m[x.id] = [x.dname || k, x.img || '', x.cost || 0, k, x.components || [], x.tier || 0]; }
+      c = {t: Date.now(), m}; try { localStorage.setItem('it19', JSON.stringify(c)); } catch (e) {}
+    }
+    for (const id in c.m) { ITM[id] = c.m[id]; ITN[String(c.m[id][0]).toLowerCase()] = +id; ITK[c.m[id][3]] = +id; }
+    for (const id in c.m) ITC[id] = (c.m[id][4] || []).map(k => ITK[k]).filter(Boolean);
+    itmState = 2;
+  } catch (e) { itmState = 3; }
+  renderBuild();
+}
+function agg(rows) {
+  const tv = x => x.timeAverage != null ? +x.timeAverage : (x.time != null ? +x.time : null);
+  const k = Math.max(0, ...rows.map(x => tv(x) || 0)) > 100 ? 1 : 60, o = {};
+  for (const x of rows) {
+    const a = o[x.itemId] || (o[x.itemId] = {}), n = x.instance || 1, b = a[n] || (a[n] = {m: 0, w: 0, ts: 0, tn: 0, r: []}), m = +x.matchCount || 0, t = tv(x);
+    b.m += m; b.w += +x.winCount || 0;
+    if (t != null && !isNaN(t)) { b.ts += t * k * m; b.tn += m; b.r.push([Math.round(t * k / 60), m]); }
+  }
+  return Object.entries(o).map(([id, a]) => {
+    const b = a[1] || Object.values(a)[0], inst = {}; let c = 1;
+    for (const n in a) { inst[n] = {m: a[n].m, wr: a[n].m ? a[n].w / a[n].m : 0, t: a[n].tn ? a[n].ts / a[n].tn : null}; if (+n > c && a[n].m >= 0.4 * b.m) c = +n; }
+    return {id: +id, m: b.m, wr: b.m ? b.w / b.m : 0, t: b.tn ? b.ts / b.tn : null, c, inst, r: b.r};
+  }).sort((p, q) => q.m - p.m);
+}
+function aggNeutral(rows) {
+  const o = {};
+  for (const x of rows || []) { if (x.itemId == null) continue; const a = o[x.itemId] || (o[x.itemId] = {m: 0, w: 0}); const em = +x.equippedMatchCount || +x.matchCount || 0; a.m += em; a.w += +x.equippedMatchCount ? (+x.equippedMatchWinCount || 0) : (+x.winCount || 0); }
+  return Object.entries(o).map(([id, a]) => ({id: +id, m: a.m, wr: a.m ? a.w / a.m : 0})).filter(x => x.m > 0).sort((p, q) => q.m - p.m).slice(0, 60);
+}
+async function loadBuild(id) {
+  const bk = buildMemKey(id);
+  if (BL[bk]) return; BL[bk] = 1;
+  const bp = activeBuildPos(id), ck = buildCacheKey(id), brk = BRK, ps = `, positionIds: [POSITION_${bp}]`, f = 'itemId instance matchCount winCount', errs = [];
+  try { const c = JSON.parse(localStorage.getItem(ck) || 'null'); if (c && Date.now() - c.t < BUILD_TTL) { B[bk] = c; renderBuild(); return; } } catch (e) {}
+  const brs = brk === 'all' ? [', bracketBasicIds: [ALL]', ''] : [`, bracketBasicIds: [${brk}]`];
+  const run = async (name, fields) => {
+    for (const br of brs) {
+      try { const d = await gq(`{ heroStats { ${name}(heroId: ${id}${br}${ps}) { ${fields} } } }`), rows = d.heroStats[name] || []; if (rows.length) return rows; }
+      catch (e) { errs.push(name + ': ' + e.message); }
+      await sleep(80);
+    }
+    return [];
+  };
+  try {
+    const bo = await run('itemBootPurchase', f + ' timeAverage'), fu = await run('itemFullPurchase', f + ' time'), ne = await run('itemNeutral', 'itemId matchCount winCount equippedMatchCount equippedMatchWinCount');
+    const full = agg(fu), boots = agg(bo);
+    if (!full.length) throw new Error(errs[0] ? errs[0].slice(0, 120) : 'нет покупок для этой позиции и ранга');
+    let total = 0;
+    try { const d = await gq(`{ heroStats { stats(heroIds: [${id}]${brk === 'all' ? '' : brs[0]}${ps}) { matchCount } } }`); total = (d.heroStats.stats || []).reduce((s, x) => s + (+x.matchCount || 0), 0); } catch (e) {}
+    const stT = total;
+    if (!total) total = boots.reduce((s, x) => s + x.m, 0) || Math.max(...full.map(x => x.m));
+    full.forEach(x => { if (x.m < 0.03 * total) x.r = null; });
+    const o = {t: Date.now(), total, boots: boots.slice(0, 6), core: full, neutral: aggNeutral(ne), dbg: {st: stT, mx: Math.max(...full.map(x => x.m)), inst: Object.entries(full[0].inst).map(([n, v]) => n + ':' + v.m).join(' '), err: errs.join('; ').slice(0, 220)}};
+    B[bk] = o; try { localStorage.setItem(ck, JSON.stringify(o)); } catch (e) {}
+  } catch (e) { B[bk] = {err: e.message}; }
+  renderBuild();
+}
+async function loadEnemy() {
+  const rk = lsGet(RK) || 'all';
+  if (ENrk !== rk) { for (const k in EN) delete EN[k]; ENrk = rk; ENerr = ''; }
+  const need = S.enemy.filter(e => e != null && !EN[e]);
+  if (!need.length || ENL || ENerr) return; ENL = true;
+  try {
+    const br = rk !== 'all' ? `, bracketBasicIds: [${rk}]` : '';
+    const d = await gq(`{ heroStats { stats(heroIds: [${need.join(',')}]${br}) { heroId matchCount physicalDamage magicalDamage pureDamage invisibleCount } } }`);
+    const g = {};
+    for (const x of d.heroStats.stats || []) {
+      const a = g[x.heroId] || (g[x.heroId] = {m: 0, ph: 0, mg: 0, pu: 0, iv: 0}), m = +x.matchCount || 0;
+      a.m += m; a.ph += (+x.physicalDamage || 0) * m; a.mg += (+x.magicalDamage || 0) * m; a.pu += (+x.pureDamage || 0) * m; a.iv += (+x.invisibleCount || 0) * m;
+    }
+    for (const e of need) { const a = g[e]; EN[e] = a && a.m ? {ph: a.ph / a.m, mg: a.mg / a.m, pu: a.pu / a.m, iv: a.iv / a.m} : {none: 1}; }
+  } catch (e) { ENerr = e.message; }
+  ENL = false; renderBuild();
+}
+const itemHTML = (id, sub, cls, click) => { const x = ITM[id], n = x ? x[0] : '#' + id; return `<div class="it${cls ? ' ' + cls : ''}"${click ? ` data-it="${id}"` : ''} title="${n}">${x && x[1] ? `<img loading="lazy" src="https://cdn.cloudflare.steamstatic.com${x[1]}" alt="" onerror="this.style.visibility='hidden'">` : ''}<span>${n}</span>${sub ? `<b>${sub}</b>` : ''}</div>`; };
+let TSEC = true;
+const tm = t => t == null ? '' : Math.round(TSEC ? t / 60 : t) + 'м';
+const pc = x => Math.round(x * 100) + '%';
+function buildHTML(id, d) {
+  const PE = guessTeam('enemy'), PA = guessTeam('ally'), lb = laneBase(d.lv || {}), tb = laneBase(d.lt || {});
+  const rows = S.enemy.map((e, i) => e == null ? null : {e, p: PE[i].p, auto: !S.apos.enemy[i]}).filter(Boolean)
+    .sort((a, b) => laneW(b.p) - laneW(a.p))
+    .map(x => { const a = d.lv && d.lv[x.e]; return {...x, dl: a && a[0] > 0 ? lanePp(a, lb) : null, w: laneW(x.p)}; });
+  const lr = rows.filter(x => x.dl != null && x.w > 1), vd = wmean(lr);
+  const verdict = lr.length ? (vd > 3 ? 'линия скорее выигрышная' : vd < -3 ? 'линия скорее тяжёлая' : 'линия примерно равная') : 'пока мало данных по лайну';
+  const vs = rows.map(x => `<li><b>${nm(x.e)}</b> (поз. ${x.p || '?'}${x.auto ? ', угадано' : ''}): ${x.dl == null ? 'нет данных по лайну' : f1(x.dl) + '% к твоей обычной линии'}${tipsFor(x.e, x.p).length ? '. ' + tipsFor(x.e, x.p).join('; ') : ''}</li>`).join('');
+  const mates = S.ally.map((a, i) => a == null || i === S.me ? null : {a, p: PA[i].p}).filter(x => x && x.p === 4).map(x => {
+    const v = d.lt && d.lt[x.a]; return `<li><b>${nm(x.a)}</b> (поз. 4): ${v && v[0] > 0 ? f1(lanePp(v, tb)) + '% к твоему обычному лайну в паре' : 'нет данных по паре'}</li>`;
+  }).join('');
+  const lane = `<h3>Лайн на 3 позиции</h3><div class="mute">Вердикт: ${verdict}. Проценты показывают, как ${nm(id)} играет лайн против этого героя относительно своей средней линии.</div><ul>${vs || '<li class="mute">Врагов пока не видно.</li>'}</ul>${mates ? '<h3>С кем стоишь</h3><ul>' + mates + '</ul>' : ''}<div class="mute">Советы по типу героя общие, а не разбор конкретной пары.</div>`;
+
+  const bp = activeBuildPos(id), pl = planHTML(id, d);
+  const lanePanel = bp === 3 ? lane : `<h3>Анализ линии</h3><div class="mute">Подробный анализ линии в этой версии пока рассчитан на 3-ю позицию. Билд, стартовый закуп и прокачка выше уже подбираются для выбранной роли (${bp}).</div>`;
+  return `<h2>${nm(id)}: билд${bp === 3 ? ' и лайн' : ''}</h2><div class="mute">Позиция билда: ${bp}. Ранг для анализа линии: ${RANKRU[lsGet(RK) || 'all']}</div>${pl.main}<div class="bcols"><div>${lanePanel}</div><div>${pl.side}</div></div>`;
+}
+function renderBuild() {
+  const el = $('build'), md = $('modal'); if (!el || !md) return;
+  const id = S.chosen, d = id != null ? D[id] : null;
+  const ok = S.panel && d && S.me != null && S.ally[S.me] === id;
+  md.hidden = !ok; if (!ok) return;
+  if (!itmState) loadItems(); loadEnemy(); loadAbil();
+  swap(el, buildHTML(id, d));
+}
+const closePanel = () => { S.panel = false; renderBuild(); };
+$('mclose').addEventListener('click', closePanel);
+async function rawQ(q) {
+  const r = await fetch('https://api.stratz.com/graphql', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + lsGet(SK)}, body: JSON.stringify({query: q})});
+  return 'HTTP ' + r.status + ' ' + (await r.text()).slice(0, 700);
+}
+async function probeText() {
+  const h = S.chosen || [...S.pool][0] || 20, out = [];
+  const g = f => `{ heroStats { guide(heroId: ${h}, positionId: POSITION_${cp}) { heroId matchCount guides(take: 2) { ${f} } } } }`;
+  const v = [['A: itemIds', 'matchId steamAccountId createdDateTime itemIds neutralItemIds'],
+    ['B: matchPlayer', 'matchId matchPlayer { heroId position isRadiant item0Id item1Id neutral0Id stats { itemPurchases { time itemId } } }'],
+    ['C: match.players', 'matchId steamAccountId match { id didRadiantWin players { steamAccountId heroId isRadiant item0Id item1Id neutral0Id stats { itemPurchases { time itemId } } } }']];
+  let mid = null;
+  for (const [n, f] of v) {
+    const t = await rawQ(g(f)); out.push(n + ':\n' + t);
+    if (!mid) { const m = /"matchId":\s*(\d+)/.exec(t); if (m) mid = m[1]; }
+    await sleep(100);
+  }
+  if (mid) out.push('D: match(id):\n' + await rawQ(`{ match(id: ${mid}) { id players { steamAccountId heroId isRadiant item0Id stats { itemPurchases { time itemId } } } } }`));
+  const mt = await typeInfo('MatchType');
+  if (mt) out.push(fmt({...mt, fields: (mt.fields || []).filter(f => /player|radiant|win|rank|duration|bracket|region|lobby|mode|start|analysis/i.test(f.name))}));
+  return out.join('\n\n');
+}
+$('probe').addEventListener('click', async () => {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try { o.textContent = await probeText(); } catch (e) { o.textContent = 'Запрос не дошёл (' + e.message + ').'; }
+});
+async function matchDumpText() {
+  const re = /item|purchase|neutral|inventory|backpack|position|lane|role|rank|stats|timeline|build/i, queue = ['MatchPlayerType'], seen = new Set(), out = [];
+  while (queue.length && seen.size < 6) {
+    const n = queue.shift(); if (seen.has(n)) continue; seen.add(n);
+    const t = await typeInfo(n);
+    if (!t) { out.push(n + ': нет такого типа'); continue; }
+    const fs = (t.fields || []).filter(f => re.test(f.name));
+    out.push(fmt({...t, fields: fs}));
+    for (const f of fs) { const b = base(f.type); if (/^(stats|.*purchase.*|.*item.*)$/i.test(f.name) && !/^(Int|Long|Short|Boolean|String|Byte|DateTime|Decimal|Float|ID)$/.test(b)) queue.push(b); }
+  }
+  return out.join('\n\n');
+}
+$('matchdump').addEventListener('click', async () => {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try { o.textContent = await matchDumpText(); } catch (e) { o.textContent = 'Запрос не дошёл (' + e.message + ').'; }
+});
+$('guidedump').addEventListener('click', async () => {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try {
+    const out = [], t = await typeInfo('HeroGuideListType');
+    if (!t) { o.textContent = 'Такого типа нет.'; return; }
+    out.push(fmt(t));
+    const seen = new Set(['HeroGuideListType']);
+    for (const f of (t.fields || [])) {
+      const n = base(f.type);
+      if (seen.has(n) || /^(Int|Long|Short|Boolean|String|Byte|DateTime|Decimal|Float|ID)$/.test(n) || seen.size > 5) continue;
+      seen.add(n); const x = await typeInfo(n); if (x && x.kind === 'OBJECT') out.push(fmt(x));
+    }
+    o.textContent = out.join('\n\n');
+  } catch (e) { o.textContent = 'Запрос не дошёл (' + e.message + ').'; }
+});
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closePanel(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.panel) closePanel(); });
+$('recs').addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) pickHero(+b.dataset.pick); });
+['allyPos', 'enemyPos'].forEach(id => $(id).addEventListener('change', e => {
+  const x = e.target; if (!x.dataset.pt) return;
+  S.apos[x.dataset.pt][+x.dataset.pi] = +x.value || null; render();
+}));
+$('itemdump').addEventListener('click', async () => {
+  const o = $('out'); o.hidden = false;
+  if (!lsGet(SK)) { o.textContent = 'Сначала вставь токен Stratz.'; return; }
+  o.textContent = 'Запрос...';
+  try {
+    const out = [];
+    for (const n of ['HeroItemPurchaseType', 'HeroItemStartingPurchaseType', 'HeroItemBootPurchaseType', 'HeroNeutralItemType', 'ConstantQuery']) { const t = await typeInfo(n); out.push(t ? fmt(t) : n + ': нет такого типа'); }
+    o.textContent = out.join('\n\n');
+  } catch (e) { o.textContent = 'Запрос не дошёл (' + e.message + ').'; }
+});
+function card(r, i, compact) {
+  const why = [], hi = (l, k) => [...l].sort((a, b) => k * (b.dl - a.dl))[0];
+  const lane = r.ll.filter(x => x.w > 1), bc = hi(r.cl, 1), wc = hi(r.cl, -1), bl = hi(lane, 1), wl = hi(lane, -1), bp = hi(r.pl, 1), bs = hi(r.sl, 1);
+  if (bc && bc.dl > 0) why.push(`хорош против ${nm(bc.e)} (${f1(bc.dl)}%)`);
+  if (wc && wc.dl < -1.5) why.push(`осторожно: ${nm(wc.e)} (${f1(wc.dl)}%)`);
+  if (bl && bl.dl > 3) why.push(`выигрывает линию против ${nm(bl.e)} (${f1(bl.dl)}%)`);
+  if (wl && wl.dl < -4) why.push(`тяжёлая линия против ${nm(wl.e)} (${f1(wl.dl)}%)`);
+  if (bp && bp.dl > 3) why.push(`в лайне с ${nm(bp.a)} (${f1(bp.dl)}%)`);
+  if (bs && bs.dl > 0) why.push(`связка с ${nm(bs.a)} (${f1(bs.dl)}%)`);
+  const ws = hi(r.sl, -1); if (ws && ws.dl < -1 && ws !== bs) why.push(`слабая связка с ${nm(ws.a)} (${f1(ws.dl)}%)`);
+  if (r.laneMix) why.push(`в лайне с ${nm(r.mate)}: ближний + дальний, лайн сбалансирован`);
+  if (r.dmgFit > 0.3) why.push(`добавляет ${r.dp < 0.5 ? 'магический' : 'физический'} урон, которого команде не хватает`);
+  if (r.cover.length) why.push('закрывает ' + r.cover.map(x => NEED[x]).join(', '));
+  if (r.posShare >= 0.45) why.push(`часто играет на ${S.myPos}-й позиции (${Math.round(r.posShare * 100)}%)`);
+  else if (r.posShare < 0.15) why.push(`редкий выбор на ${S.myPos}-й позиции (${Math.round(r.posShare * 100)}%)`);
+  if (r.lean != null && Math.abs(r.lean) >= 3) why.push(r.lean > 0 ? 'сильнее в долгой игре' : 'сильнее в ранней игре');
+  if (r.cl.length < 2 && r.tot) why.push(`мало подтверждённых матчапов (${Math.round(100 * r.bad / r.tot)}% из проверенных плохие)`);
+  if (compact) return `<div class="rr" style="animation-delay:${Math.min(i, 12) * 30}ms"><b>${i + 1}. ${nm(r.id)}</b><span>${f1(r.total)}</span><span class="mute">${why[0] || ''}</span><button class="pick" data-pick="${r.id}">${S.chosen === r.id ? '✓' : 'Выбрать'}</button></div>`;
+  const wd = Math.max(8, Math.min(100, 50 + r.total * 6));
+  const scoreDetails = [
+    `винрейт ${f1(r.winrateScore)}`,
+    `контрпики ${f1(r.matchupScore)}`,
+    `синергия ${f1(r.synergyScore)}`,
+    `линии ${f1(r.laneScore)}`,
+    `роли ${f1(r.roleScore)}`,
+    ...(Math.abs(r.dmgFit) >= 0.1 ? [`баланс урона${r.dmgFb ? ' (по ролям)' : ''} ${f1(r.dmgFit)}`] : []),
+    ...(r.laneMix ? [`баланс лайна ${f1(r.laneMix)}`] : []),
+    `${S.myPos}-я позиция ${f1(r.posFit)}`,
+    ...(Math.abs(r.rob) >= 0.1 ? [`надёжность данных ${f1(r.rob)}`] : [])
+  ].join(' · ');
+  return `<div class="rc${S.chosen === r.id ? ' chosen' : ''}" style="animation-delay:${i * 80}ms"><b>${i + 1}. ${nm(r.id)}</b> <span class="mute">${r.pw != null ? `винрейт на ${S.myPos} поз.` : 'базовый винрейт'} ${((r.pw == null ? r.base : r.pw) * 100).toFixed(1)}%, очки ${f1(r.total)}</span><div class="bar2"><i style="width:${wd}%"></i></div><div class="mute">${why.slice(0, 5).join('; ') || 'просто сильный герой на этом ранге'}</div><details class="score-breakdown"><summary>Из чего сложились очки</summary><div class="mute">${scoreDetails}</div></details><button class="pick" data-pick="${r.id}">${S.chosen === r.id ? 'Выбран ✓' : 'Выбрать'}</button></div>`;
+}
+const swap = (el, html) => { if (el._h === html) return; const o = [...el.querySelectorAll('details')].map(d => d.open); el.innerHTML = html; el._h = html; el.querySelectorAll('details').forEach((d, i) => { if (o[i]) d.open = true; }); };
+function renderRecs() {
+  renderWk();
+  const el = $('recs'); if (!el) return;
+  const known = S.enemy.filter(x => x != null).length;
+  const st = S.me != null ? 'Стадия ' + (S.me < 2 ? 1 : S.me < 4 ? 2 : 3) : 'Стадия не отмечена';
+  const head = `<div>Рекомендации для ${S.myPos}-й позиции. ${st}. Раскрыто врагов: ${known}. Уверенность: ${known >= 4 ? 'высокая' : known >= 2 ? 'средняя' : 'низкая'}. ${STATIC ? '' : 'Урон: ' + (dmgErr ? 'ошибка Stratz (' + escapeHTML(dmgErr) + '), считаю по ролям' : Object.values(DMG).filter(x => !x.none).length + ' из ' + Object.keys(DMG).length + ' героев с данными') + '. '}Урон и контроль по позиции: ${Object.keys(POSX).length ? Object.keys(POSX).length + ' героев' : posxErr ? 'нет (' + escapeHTML(posxErr) + ')' : 'нет'}.</div>`;
+  if (!STATIC && provider() !== 'stratz') { swap(el, head + (BOOTING ? '<p>Загружаю данные…</p>' : '<p>Вставь токен Stratz, и подсказки заработают.</p>')); return; }
+  if (!S.pool.size) { swap(el, head + '<p>Добавь героев в пул (режим «Редактор пула»).</p>'); return; }
+  const ids = [...S.pool].filter(id => D[id]), miss = S.pool.size - ids.length;
+  const avg = ids.length ? Math.round(ids.reduce((s, id) => s + Object.keys(D[id].v).length, 0) / ids.length) : 0;
+  const np = ids.filter(id => D[id].p).length, e1 = ids.map(id => D[id].laneErr || D[id].statErr).find(Boolean);
+  const note = loadErr ? `<p>Ошибка ${STATIC ? 'данных' : 'Stratz'}: ${escapeHTML(loadErr)}</p>` : busy ? `<p>Загружаю данные, осталось героев: ${miss}...</p>` : '';
+  swap(el, head + note + recommend().map((r, i) => card(r, i, i >= 3)).join('') + `<p>Данные: ${ids.length} из ${S.pool.size} героев пула, в среднем ${avg} матчапов на героя, статистика по ${S.myPos}-й позиции у ${np}.${e1 ? ' Часть данных не пришла (' + escapeHTML(e1) + ').' : ''} Позиции героев ${Object.keys(POSD).length ? 'угадываю по статистике Stratz' : 'угадываю по ролям'}, пока не выставишь вручную${posErr ? ' (статистика позиций не пришла: ' + escapeHTML(posErr) + ')' : ''}. Баланс урона: ${STATIC ? 'по позиции, данные есть у ' + Object.keys(POSX).length + ' героев' : dmgErr ? 'не загрузился (' + escapeHTML(dmgErr) + ')' : 'данные есть у ' + Object.values(DMG).filter(x => !x.none).length + ' из ' + Object.keys(DMG).length + ' героев'}.</p>`);
+}
+render();
+dbLoad().then(() => { renderColl(); render(); });
+(async () => {
+  await detectStatic(); BOOTING = false; srcLabel();
+  let d = null;
+  if (STATIC) { try { d = await fetchJson('data/heroes.json'); } catch (e) {} }
+  if (!d) { const r = await fetch('https://api.opendota.com/api/heroes'); if (!r.ok) throw new Error(r.status); d = await r.json(); }
+  H = d.map(h => ({...h, short: h.name.replace('npc_dota_hero_', '')}))
+    .sort((a, b) => a.localized_name.localeCompare(b.localized_name));
+  byId = Object.fromEntries(H.map(h => [h.id, h])); setTimeout(() => { ensure(); collectAll(); }, 0);
+  render();
+})().catch(() => { BOOTING = false; $('grid').innerHTML = '<div class="empty">Не получилось загрузить героев. Проверь интернет и открой файл напрямую у себя на компе, а не из превью.</div>'; });
+</script>
+</body>
+</html>
