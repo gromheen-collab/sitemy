@@ -1,20 +1,29 @@
 name: Collect data
 
 on:
+  # Daily run. It is OFF until you remove the two leading "#" below
+  # (do that after you have checked STRATZ's terms about publishing their data).
+  # schedule:
+  #   - cron: '30 4 * * *'
   workflow_dispatch:
     inputs:
       heroes:
-        description: 'Hero ids, comma separated. Empty = all heroes. Example: 135'
+        description: 'Hero ids, comma separated. Empty = all heroes. Example: 135 (a run with ids is never published)'
         required: false
         default: ''
       weeks:
-        description: 'Weeks to merge, 1 to 4 (the current partial week plus full weeks)'
+        description: 'Weeks to merge, 1 to 4 (the current partial week plus full weeks). Scheduled runs use 3'
         required: false
         default: '1'
       ranks:
         description: 'Ranks, comma separated (DIVINE_IMMORTAL, LEGEND_ANCIENT, ..., all)'
         required: false
         default: 'DIVINE_IMMORTAL'
+      deploy:
+        description: 'Publish the site and the data on GitHub Pages after collecting'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -51,7 +60,7 @@ jobs:
           RANKS: ${{ inputs.ranks }}
         run: node collector/collect.mjs
 
-      - name: Keep the data for a few days
+      - name: Keep the data
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -59,3 +68,40 @@ jobs:
           path: data
           if-no-files-found: ignore
           retention-days: 3
+
+  # Runs only when the collector finished OK (a failed collection never replaces the live site).
+  deploy:
+    needs: collect
+    if: ${{ github.event_name == 'schedule' || (inputs.deploy && inputs.heroes == '') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: data
+          path: data
+
+      - name: Assemble the site
+        run: |
+          if [ ! -f site/index.html ]; then echo "site/index.html is missing: put the site file there"; exit 1; fi
+          mkdir _site
+          cp site/index.html _site/index.html
+          cp -r data _site/data
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
